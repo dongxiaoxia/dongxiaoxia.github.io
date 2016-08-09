@@ -1,0 +1,823 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css"/>
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.useso.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Spring Boot," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/images/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="在上一篇文章开发第一个Spring Boot项目我们创建了第一个Spring Boot 项目，主要的代码为：123456@SpringBootApplicationpublic class DemoApplication &amp;#123;   public static void main(String[] args) &amp;#123;      SpringApplication.run(DemoApp">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring Boot特点之SpringApplication">
+<meta property="og:url" content="http://www.dongxiaoxia.xyz/2016/08/09/Spring-Boot-2/index.html">
+<meta property="og:site_name" content="东小侠">
+<meta property="og:description" content="在上一篇文章开发第一个Spring Boot项目我们创建了第一个Spring Boot 项目，主要的代码为：123456@SpringBootApplicationpublic class DemoApplication &amp;#123;   public static void main(String[] args) &amp;#123;      SpringApplication.run(DemoApp">
+<meta property="og:image" content="http://www.dongxiaoxia.xyz/images/spring-boot-two/1.png">
+<meta property="og:image" content="http://www.dongxiaoxia.xyz/images/spring-boot-two/2.png">
+<meta property="og:image" content="http://www.dongxiaoxia.xyz/images/spring-boot-two/3.png">
+<meta property="og:image" content="http://www.dongxiaoxia.xyz/images/spring-boot-two/4.png">
+<meta property="og:image" content="http://www.dongxiaoxia.xyz/images/spring-boot-two/5.png">
+<meta property="og:image" content="http://www.dongxiaoxia.xyz/images/spring-boot-two/6.png">
+<meta property="og:image" content="http://www.dongxiaoxia.xyz/images/spring-boot-two/7.png">
+<meta property="og:updated_time" content="2016-08-09T09:53:24.061Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Spring Boot特点之SpringApplication">
+<meta name="twitter:description" content="在上一篇文章开发第一个Spring Boot项目我们创建了第一个Spring Boot 项目，主要的代码为：123456@SpringBootApplicationpublic class DemoApplication &amp;#123;   public static void main(String[] args) &amp;#123;      SpringApplication.run(DemoApp">
+<meta name="twitter:image" content="http://www.dongxiaoxia.xyz/images/spring-boot-two/1.png">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 6276589648156296000,
+      author: '博主'
+    }
+  };
+</script>
+
+  <title> Spring Boot特点之SpringApplication | 东小侠 </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//tajs.qq.com/stats?sId=55879611";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">东小侠</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">怕什么真理无穷 进一寸有进一寸的欢喜</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-home fa-fw"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-th fa-fw"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-archive fa-fw"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-tags fa-fw"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-user fa-fw"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-resume">
+          <a href="/resume" rel="section">
+            
+              <i class="menu-item-icon fa fa-book fa-fw"></i> <br />
+            
+            简历
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-something">
+          <a href="/something" rel="section">
+            
+              <i class="menu-item-icon fa fa-flash fa-fw"></i> <br />
+            
+            有料
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="#" class="st-search-show-outputs">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <form class="site-search-form">
+  <input type="text" id="st-search-input" class="st-search-input st-default-search-input" />
+</form>
+
+<script type="text/javascript">
+  (function(w,d,t,u,n,s,e){w['SwiftypeObject']=n;w[n]=w[n]||function(){
+    (w[n].q=w[n].q||[]).push(arguments);};s=d.createElement(t);
+    e=d.getElementsByTagName(t)[0];s.async=1;s.src=u;e.parentNode.insertBefore(s,e);
+  })(window,document,'script','//s.swiftypecdn.com/install/v2/st.js','_st');
+
+  _st('install', 'LEW-HJ8C4q4d2iL3MKNA','2.0.0');
+</script>
+
+
+
+    </div>
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Spring Boot特点之SpringApplication
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-08-09T17:20:44+08:00" content="2016-08-09">
+              2016-08-09
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/Spring-Boot/" itemprop="url" rel="index">
+                    <span itemprop="name">Spring Boot</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+		   <!-- 在下面的位置加上如下代码 -->
+  
+       <span id="busuanzi_container_page_pv">
+       &nbsp; | &nbsp; 热度&nbsp; <span id="busuanzi_value_page_pv"></span>°C
+       </span>
+       
+   <!-- 在上面的位置加上如上代码 --> 
+		  
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/08/09/Spring-Boot-2/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/08/09/Spring-Boot-2/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>在上一篇文章<a href="http://www.dongxiaoxia.xyz/2016/08/04/Spring-Boot-1/" title="开发第一个Spring Boot项目">开发第一个Spring Boot项目</a>我们创建了第一个Spring Boot 项目，主要的代码为：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@SpringBootApplication</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DemoApplication</span> </span>&#123;</span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">      SpringApplication.run(DemoApplication.class, args);</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>在<code>main</code>方法中引用了<code>SpringApplication</code>这个类，<code>SpringApplication</code>类通过运行<code>main</code>方法提供了一个方便的方法来启动Spring Boot 应用。在许多情况下直接在<code>main</code>方法里面调用<code>SpringApplication</code>的静态方法<code>SpringApplication.run</code>即可。</p>
+<h3 id="自定义Banner">自定义Banner</h3><p>项目启动后可以看到一个奇葩的玩意：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">.   ____          _            __ _ _</span><br><span class="line">  /\\ / ___&apos;_ __ _ _(_)_ __  __ _ \ \ \ \</span><br><span class="line">  ( ( )\___ | &apos;_ | &apos;_| | &apos;_ \/ _` | \ \ \ \</span><br><span class="line">  \\/  ___)| |_)| | | | | || (_| |  ) ) ) )</span><br><span class="line">  &apos;  |____| .__|_| |_|_| |_\__, | / / / /</span><br><span class="line">  =========|_|==============|___/=/_/_/_/</span><br><span class="line">  :: Spring Boot ::        (v1.4.0.RELEASE)</span><br></pre></td></tr></table></figure></p>
+<p>这是什么鬼=<em>=!!  表示看不懂。<br>这个是Spring Boot 项目启动时默认的Banner，既然看不懂，那我们来自定义一个自己的Banner吧。<br>先上效果图：<br><img src="/images/spring-boot-two/1.png" alt=""><br>嗯，感觉不怎么样好像=</em>= ，怎么做到的呢，很简单，只要在类路径下添加  <code>banner.txt</code>文件即可。<br>Banner文件不但可以是 <code>banner.txt</code>   ，还可以是<code>banner.gif</code>, <code>banner.jpg</code> 或者<code>banner.png</code>  等图片，同样只要放在类路径下即可，效果如下面图片所示。<br><img src="/images/spring-boot-two/2.png" alt=""><br><img src="/images/spring-boot-two/3.png" alt=""><br>本项目直接放在<code>src\main\resources</code>下。<br><img src="/images/spring-boot-two/4.png" alt=""><br>可以通过在配置文件<code>application.yml</code>下 修改<code>spring.main.banner-mode</code>属性决定 是否要在控制台输出(<code>console</code>)Banner或记录在log日志下(<code>log</code>)，或者不显示Banner图案(<code>off</code>)。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">spring:</span><br><span class="line">  main:</span><br><span class="line">    banner-mode: &quot;off&quot;</span><br></pre></td></tr></table></figure></p>
+<h3 id="自定义SpringApplication">自定义SpringApplication</h3><p>如果SpringApplication默认的配置不满足要求，我们可以创建一个本地的SpringApplication实例在定制自己想要的配置。举个栗子，想要关闭banner我们可以向下面那样，不过先要注释掉application配置文件中相关配置信息。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">SpringApplication app = <span class="keyword">new</span> SpringApplication(DemoApplication.class);</span><br><span class="line">app.setBannerMode(Banner.Mode.OFF);</span><br><span class="line">app.run(args);</span><br></pre></td></tr></table></figure></p>
+<p>可以使用编码的方式配置SpringApplication,当然我们也可以用<code>application.properties</code>或<code>application.yml</code>配置文件来配置。有关SpringApplication的配置选项可以查看SpringApplication <a href="http://docs.spring.io/spring-boot/docs/1.4.0.RELEASE/api/org/springframework/boot/SpringApplication.html" target="_blank" rel="external">Javadoc</a> 。</p>
+<h3 id="流畅的SpringApplication_构建API">流畅的SpringApplication 构建API</h3><p>除了使用上面的方式构建SpringApplication，还可以使用<code>SpringApplicationBuilder</code>来构建。举个栗子：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">new</span> SpringApplicationBuilder()</span><br><span class="line">      .bannerMode(Banner.Mode.OFF)</span><br><span class="line">      .sources(Parent.class)</span><br><span class="line">      .child(DemoApplication.class)</span><br><span class="line">      .run(args);</span><br></pre></td></tr></table></figure></p>
+<h3 id="Application事件与监听器">Application事件与监听器</h3><p>除了使用Spring框架的事件之外，SpringApplication也会发送一些额外的事件。<br>有些事件是在<code>ApplicationContext</code>生成之前就自动触发了，对于这些事件，不能作为<code>@Bean</code>注册监听器，可以通过 <code>SpringApplication.addListeners(…​)</code> or <code>SpringApplicationBuilder.listeners(…​)</code>方法。<br>如果不管应用是否已经创建都想要那些监听器被自动注册，可以在项目下添加一个<code>META-INF / spring.factories</code>文件，使用 <code>org.springframework.context.ApplicationListener</code>关键字配置。如：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">org.springframework.context.ApplicationListener=com.example.project.MyListener</span><br></pre></td></tr></table></figure></p>
+<p>Application事件按下列顺序发送，你的应用程序运行：</p>
+<pre><code><span class="number">1</span>.  <span class="escape">`A</span>pplicationStartedEvent <span class="escape">`：</span>在运行开始前发出，除了监听器和初始化的注册之外的任何处理之前。
+<span class="number">2</span>.  <span class="escape">`A</span>pplicationEnvironmentPreparedEvent<span class="escape">` </span>： 当在上下文中使用的 Environment 是已知的，但是在创建上下文之前
+<span class="number">3</span>. <span class="escape">`A</span>pplicationPreparedEvent<span class="escape">` </span>: 启动刷新之前，bean定义已经加载之后。
+<span class="number">4</span>.  <span class="escape">`A</span>pplicationReadyEvent<span class="escape">` </span>： 刷新之后，表明该应用程序已准备好服务请求的任何相关的回调已被处理 之后。
+<span class="number">5</span>.  <span class="escape">`A</span>pplicationFailedEvent <span class="escape">`：</span>如果启动时有异常。
+</code></pre><p>在Spring Boot内部是使用事件来处理各种任务，但通常通常我们不需要使用这些事件。</p>
+<h3 id="Web环境">Web环境</h3><p>一个SpringApplication将尝试创建正确类型的<code>ApplicationContext</code>。默认会根据是否在开发一个web 应用使用<code>AnnotationConfigApplicationContext</code>或<code>AnnotationConfigEmbeddedWebApplicationContext</code>。决定使用web环境的算法其实是十分简单的（基于几个类的存在），想要覆盖这个默认机制可以使用 <code>setWebEnvironment(boolean webEnvironment)</code>。<br>另外，也可以采取通过调用<code>setApplicationContextClass(…​)</code>所使用的<code>ApplicationContext</code>的类型来完全控制。通常在JUnit测试中使用<code>SpringApplication</code>时会调用 <code>setWebEnvironment(false)</code>。</p>
+<h3 id="访问应用参数">访问应用参数</h3><p>如果你想要访问通过 <code>SpringApplication.run(…​)</code>得到的应用参数，可以注入一个 <code>org.springframework.boot.ApplicationArguments</code> bean。 <code>ApplicationArguments</code>接口提供了访问未加工的 String[]参数以及解析后的选项和非选项参数。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.example;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.springframework.beans.factory.annotation.Autowired;</span><br><span class="line"><span class="keyword">import</span> org.springframework.boot.ApplicationArguments;</span><br><span class="line"><span class="keyword">import</span> org.springframework.stereotype.Component;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.util.List;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span><br><span class="line"> * Created by dongxiaoxia on 2016/8/9.</span><br><span class="line"> */</span></span><br><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyBean</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">MyBean</span><span class="params">(ApplicationArguments args)</span></span>&#123;</span><br><span class="line">        <span class="keyword">boolean</span> debug = args.containsOption(<span class="string">"debug"</span>);</span><br><span class="line">        List&lt;String&gt; files = args.getNonOptionArgs();</span><br><span class="line">        <span class="comment">// if run with "--debug logfile.txt" debug=true, files=["logfile.txt"]</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>测试一下：</p>
+<p><img src="/images/spring-boot-two/5.png" alt=""><br><img src="/images/spring-boot-two/6.png" alt=""><br><img src="/images/spring-boot-two/7.png" alt=""></p>
+<h3 id="使用ApplicationRunner或CommandLineRunner">使用ApplicationRunner或CommandLineRunner</h3><p>如果需要在springapplication启动之后运行一些特定的代码，可以实现 <code>ApplicationRunner</code>或 <code>CommandLineRunner</code>接口。 两个接口以相同的方式工作，并提供了一​​个单一的 <code>run</code>方法，该方法将被调用 <code>SpringApplication.run(…​)</code>完成之前。<br>CommandLineRunner接口提供访问用应用程序参数作为的一个简单的字符串数组，而ApplicationRunner使用上面所讨论的ApplicationArguments接口。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.example;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.springframework.boot.CommandLineRunner;</span><br><span class="line"><span class="keyword">import</span> org.springframework.stereotype.Component;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span><br><span class="line"> * Created by dongxiaoxia on 2016/8/9.</span><br><span class="line"> */</span></span><br><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ApplicationRunnerTest</span> <span class="keyword">implements</span> <span class="title">CommandLineRunner</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">(String... agrs)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        <span class="comment">//DO something</span></span><br><span class="line">        System.out.println(<span class="string">"+++++++++++++++++++++++++++++++++++++++++++++++++"</span>);</span><br><span class="line">        <span class="keyword">for</span> (String arg:agrs)&#123;</span><br><span class="line">            System.out.println(arg);</span><br><span class="line">        &#125;</span><br><span class="line">        System.out.println(<span class="string">"+++++++++++++++++++++++++++++++++++++++++++++++++"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>如果定义了几个必须在一个特定的顺序调用 的<code>CommandLineRunner</code>或 <code>ApplicationRunner</code>bean ,你还可以实现<code>org.springframework.core.Ordered</code>接口或使用 <code>org.springframework.core.annotation.Order</code>注释。</p>
+<h3 id="Application退出">Application退出</h3><p>每一个 <code>SpringApplication</code>   都会在JVM注册一个关机钩子以确保 <code>ApplicationContext</code>在退出时优雅的关闭。所有标准的Spring生命周期回调（ 如 <code>DisposableBean</code>接口，或 <code>DisposableBean</code>注释）都能被使用。<br>此外，如果想要在应用结束时返回一个具体的退出代码，可以实现 <code>org.springframework.boot.ExitCodeGenerator</code>接口。</p>
+<h3 id="管理功能">管理功能</h3><p>通过指定<code>spring.application.admin.enabled</code>属性，可以使行政相关的特点 。这暴露了在<code>MBeanServer</code>平台上的 <a href="https://github.com/spring-projects/spring-boot/tree/v1.4.0.RELEASE/spring-boot/src/main/java/org/springframework/boot/admin/SpringApplicationAdminMXBean.java" target="_blank" rel="external">SpringApplicationAdminMXBean</a>。可以使用此功能来远程管理Spring Boot程序。这对任何服务包装器实现也是有用的 。</p>
+<ul>
+<li><small>如果你想知道，应用程序正在运行在哪个HTTP端口 ，可以通过local.server.port获取。<small></small></small></li>
+<li><small>启用此功能时，作为MBean暴露的关机方法应用要注意。<small></small></small></li>
+</ul>
+<blockquote>
+<p>完结撒花 V_V</p>
+</blockquote>
+
+      
+    </div>
+    
+    <div>
+      
+        
+<div id="wechat_subscriber" style="display: block； padding: 10px 0; margin: 20px auto; width: 100%; text-align: center">
+    <img id="wechat_subscriber_qcode" src="/images/wechat-qcode.jpg" alt="东小侠 wechat" style="width: 200px; max-width: 100%;"/>
+    <div>欢迎您扫一扫上面的微信公众号，订阅我的博客！</div>
+</div>
+
+      
+    </div>
+
+    <div>
+      
+        
+<div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center">
+  <div>我知道是不会有人点的，但万一有人想不开呢？</div>
+  <button id="rewardButton", disable="enable", onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}", style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+    <span onmouseover="this.style.color='rgb(236,96,0)';this.style.background='rgb(204,204,204)'" onMouseOut="this.style.color='#fff';this.style.background='rgb(236,96,0)'" style="display: inline-block; width: 70px; height: 70px; border-radius: 100%; line-height: 81px; color: #fff; font: 400 35px/75px 'microsofty'; background: rgb(236,96,0)">赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/images/weixin.jpg" alt="东小侠 WeChat Pay" style="width: 200px; max-width: 100%; display: inline-block"/>
+        <p>微信打赏</p>
+      </div>
+    
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="/images/zhifubao.jpg" alt="东小侠 Alipay" style="width: 200px; max-width: 100%; display: inline-block"/>
+        <p>支付宝打赏</p>
+      </div>
+    
+  </div>
+</div>
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Spring-Boot/" rel="tag">#Spring Boot</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/08/04/Spring-Boot-1/" rel="next" title="开发第一个Spring Boot项目">
+                <i class="fa fa-chevron-left"></i> 开发第一个Spring Boot项目
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <div class="ds-share flat" data-thread-key="2016/08/09/Spring-Boot-2/"
+     data-title="Spring Boot特点之SpringApplication"
+     data-content=""
+     data-url="http://www.dongxiaoxia.xyz/2016/08/09/Spring-Boot-2/">
+  <div class="ds-share-inline">
+    <ul  class="ds-share-icons-16">
+
+      <li data-toggle="ds-share-icons-more"><a class="ds-more" href="javascript:void(0);">分享到：</a></li>
+      <li><a class="ds-weibo" href="javascript:void(0);" data-service="weibo">微博</a></li>
+      <li><a class="ds-qzone" href="javascript:void(0);" data-service="qzone">QQ空间</a></li>
+      <li><a class="ds-qqt" href="javascript:void(0);" data-service="qqt">腾讯微博</a></li>
+      <li><a class="ds-wechat" href="javascript:void(0);" data-service="wechat">微信</a></li>
+
+    </ul>
+    <div class="ds-share-icons-more">
+    </div>
+  </div>
+</div>
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  <p>热评文章</p>
+  <div class="ds-top-threads" data-range="weekly" data-num-items="4"></div>
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2016/08/09/Spring-Boot-2/"
+           data-title="Spring Boot特点之SpringApplication" data-url="http://www.dongxiaoxia.xyz/2016/08/09/Spring-Boot-2/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="东小侠" />
+          <p class="site-author-name" itemprop="name">东小侠</p>
+          <p class="site-description motion-element" itemprop="description" style="margin-top: 5px;font-size: 15px;color: #fff">怕什么真理无穷 进一寸有进一寸的欢喜</p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">15</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">9</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">12</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/dongxiaoxia" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.zhihu.com/people/dong-xiao-xia" target="_blank" title="知乎">
+                  
+                    <i class="fa fa-globe"></i>
+                  
+                  知乎
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.douban.com/people/dongxiaoxia" target="_blank" title="豆瓣">
+                  
+                    <i class="fa fa-globe"></i>
+                  
+                  豆瓣
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#自定义Banner"><span class="nav-number">1.</span> <span class="nav-text">自定义Banner</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#自定义SpringApplication"><span class="nav-number">2.</span> <span class="nav-text">自定义SpringApplication</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#流畅的SpringApplication_构建API"><span class="nav-number">3.</span> <span class="nav-text">流畅的SpringApplication 构建API</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Application事件与监听器"><span class="nav-number">4.</span> <span class="nav-text">Application事件与监听器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Web环境"><span class="nav-number">5.</span> <span class="nav-text">Web环境</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#访问应用参数"><span class="nav-number">6.</span> <span class="nav-text">访问应用参数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用ApplicationRunner或CommandLineRunner"><span class="nav-number">7.</span> <span class="nav-text">使用ApplicationRunner或CommandLineRunner</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Application退出"><span class="nav-number">8.</span> <span class="nav-text">Application退出</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#管理功能"><span class="nav-number">9.</span> <span class="nav-text">管理功能</span></a></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2015 - 
+  <span itemprop="copyrightYear">2016</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">东小侠</span>
+  <span class="with-love">
+    <i class="fa fa-heart-o"></i>
+  </span>
+  <apan> 岁月长 衣裳薄</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+        
+
+<div class="busuanzi-count">
+
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv"><i class="fa fa-user"></i>本站访客数<span class="busuanzi-value" id="busuanzi_value_site_uv"></span>人次</span>
+  
+
+  
+    <span class="site-pv"><i class="fa fa-eye"></i>本站总访问量<span class="busuanzi-value" id="busuanzi_value_site_pv"></span>次</span>
+  
+  
+</div>
+
+
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"dongxiaoxia"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+      
+      <script src="/vendors/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
+      <script src="/js/src/hook-duoshuo.js"></script>
+    
+  
+
+
+
+
+
+  
+  
+  
+
+  
+
+  
+
+</body>
+</html>
