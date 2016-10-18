@@ -64,7 +64,7 @@
 <link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="test," />
+  <meta name="keywords" content="github maven," />
 
 
 
@@ -80,16 +80,16 @@
 
 
 
-<meta name="description" content="怕什么真理无穷 进一寸有进一寸的欢喜">
+<meta name="description" content="一.deploy项目到本地1.在pom.xml中配置distribuManage12345678&amp;lt;distributionManagement&amp;gt;    &amp;lt;repository&amp;gt;        &amp;lt;id&amp;gt;file-repository&amp;lt;/id&amp;gt;        &amp;lt;url&amp;gt;file://D:\GitHub\maven-repo&amp;lt;/url&amp;g">
 <meta property="og:type" content="article">
-<meta property="og:title" content="test.md">
-<meta property="og:url" content="http://www.dongxiaoxia.xyz/2016/04/23/test-md/index.html">
+<meta property="og:title" content="利用GitHub搭建个人maven仓库">
+<meta property="og:url" content="http://www.dongxiaoxia.xyz/2016/10/18/github-maven-repository/index.html">
 <meta property="og:site_name" content="东小侠">
-<meta property="og:description" content="怕什么真理无穷 进一寸有进一寸的欢喜">
-<meta property="og:updated_time" content="2016-05-10T04:46:54.283Z">
+<meta property="og:description" content="一.deploy项目到本地1.在pom.xml中配置distribuManage12345678&amp;lt;distributionManagement&amp;gt;    &amp;lt;repository&amp;gt;        &amp;lt;id&amp;gt;file-repository&amp;lt;/id&amp;gt;        &amp;lt;url&amp;gt;file://D:\GitHub\maven-repo&amp;lt;/url&amp;g">
+<meta property="og:updated_time" content="2016-10-18T03:04:03.727Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="test.md">
-<meta name="twitter:description" content="怕什么真理无穷 进一寸有进一寸的欢喜">
+<meta name="twitter:title" content="利用GitHub搭建个人maven仓库">
+<meta name="twitter:description" content="一.deploy项目到本地1.在pom.xml中配置distribuManage12345678&amp;lt;distributionManagement&amp;gt;    &amp;lt;repository&amp;gt;        &amp;lt;id&amp;gt;file-repository&amp;lt;/id&amp;gt;        &amp;lt;url&amp;gt;file://D:\GitHub\maven-repo&amp;lt;/url&amp;g">
 
 
 
@@ -107,7 +107,7 @@
   };
 </script>
 
-  <title> test.md | 东小侠 </title>
+  <title> 利用GitHub搭建个人maven仓库 | 东小侠 </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -306,7 +306,7 @@
             
             
               
-                test.md
+                利用GitHub搭建个人maven仓库
               
             
           </h1>
@@ -318,11 +318,30 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-04-23T01:19:03+08:00" content="2016-04-23">
-              2016-04-23
+            <time itemprop="dateCreated" datetime="2016-10-18T10:56:30+08:00" content="2016-10-18">
+              2016-10-18
             </time>
           </span>
 
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/maven/" itemprop="url" rel="index">
+                    <span itemprop="name">maven</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
           
 
 		   <!-- 在下面的位置加上如下代码 -->
@@ -337,8 +356,8 @@
             
               <span class="post-comments-count">
                 &nbsp; | &nbsp;
-                <a href="/2016/04/23/test-md/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/04/23/test-md/" itemprop="commentsCount"></span>
+                <a href="/2016/10/18/github-maven-repository/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/10/18/github-maven-repository/" itemprop="commentsCount"></span>
                 </a>
               </span>
             
@@ -361,7 +380,20 @@
       
 
       
-        
+        <h2 id="一-deploy项目到本地">一.deploy项目到本地</h2><p>1.在pom.xml中配置distribuManage<br><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">distributionManagement</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">repository</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">id</span>&gt;</span>file-repository<span class="tag">&lt;/<span class="name">id</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">url</span>&gt;</span>file://D:\GitHub\maven-repo<span class="tag">&lt;/<span class="name">url</span>&gt;</span></span><br><span class="line">        <span class="comment">&lt;!--SNAPSHOT 名称下用 Maven3 uniqueVersion不起作用 ，必须用Maven2--&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">uniqueVersion</span>&gt;</span>false<span class="tag">&lt;/<span class="name">uniqueVersion</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">repository</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">distributionManagement</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
+<p>2.执行命令 <code>mvn deploy</code></p>
+<h2 id="二-_提交项目到GitHub">二.  提交项目到GitHub</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">git init</span><br><span class="line">git add -A</span><br><span class="line">git commit -m <span class="string">"first commit"</span></span><br><span class="line">git remote add origin https://github.com/dongxiaoxia/maven-repo.git</span><br><span class="line">git push -u origin master</span><br></pre></td></tr></table></figure>
+<h2 id="三-在其他项目中引入该依赖">三.在其他项目中引入该依赖</h2><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">repositories</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">repository</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">id</span>&gt;</span>dongxiaoxia-repository<span class="tag">&lt;/<span class="name">id</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">name</span>&gt;</span>东小侠的仓库<span class="tag">&lt;/<span class="name">name</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">url</span>&gt;</span>https://raw.githubusercontent.com/dongxiaoxia/maven-repo/master<span class="tag">&lt;/<span class="name">url</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">repository</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">repositories</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">dependencies</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>xyz.dongxiaoxia.commons<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>utils<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.0-SNAPSHOT<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependencies</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<h2 id="注意问题">注意问题</h2><ol>
+<li>如果项目为SNAPSHOT快照版本，deploy时生成的jar包名称会带上时间戳，<code>&lt;uniqueVersion&gt;false&lt;/uniqueVersion&gt;</code> 没有效果，解决方法两种，一是去掉SNAPSHOT名称后缀，二是把maven版本maven3改为maven2，并且加上<code>&lt;uniqueVersion&gt;false&lt;/uniqueVersion&gt;</code> 。<br><br></li>
+<li>其他项目引用时可能会找不到该依赖，可以看一下maven 的setting配置文件，在我的setting文件中，配置了如下一段配置：<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&lt;mirror&gt;</span><br><span class="line">   &lt;id&gt;nexus-osc&lt;/id&gt;</span><br><span class="line">   &lt;mirrorOf&gt;*&lt;/mirrorOf&gt;</span><br><span class="line">   &lt;name&gt;Nexus osc&lt;/name&gt;</span><br><span class="line">   &lt;url&gt;http://repo1.maven.org/maven2/&lt;/url&gt;</span><br><span class="line">&lt;/mirror&gt;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>这样配置的话就算pom.xml文件配置了正确的repository，也没有效果，因为所有的依赖都被拦截掉了。<br>可以配置如下:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&lt;mirror&gt;</span><br><span class="line">    &lt;id&gt;nexus-osc&lt;/id&gt;</span><br><span class="line">    &lt;mirrorOf&gt;*,!dongxiaoxia-repository&lt;/mirrorOf&gt;</span><br><span class="line">    &lt;name&gt;Nexus osc&lt;/name&gt;</span><br><span class="line">    &lt;url&gt;http://repo1.maven.org/maven2/&lt;/url&gt;</span><br><span class="line">&lt;/mirror&gt;</span><br></pre></td></tr></table></figure></p>
+<blockquote>
+<p>三步下来，成功利用GitHub搭建个人maven仓库并且成功引用到项目中。GitHub中的maven仓库例子请见 <a href="https://github.com/dongxiaoxia/maven-repo" target="_blank" rel="external">maven-repo</a> 。</p>
+</blockquote>
+
       
     </div>
     
@@ -407,7 +439,7 @@
       
         <div class="post-tags">
           
-            <a href="/tags/test/" rel="tag">#test</a>
+            <a href="/tags/github-maven/" rel="tag">#github maven</a>
           
         </div>
       
@@ -416,17 +448,13 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2015/12/24/java00003/" rel="next" title="如何成为一个牛掰的Java大神">
-                <i class="fa fa-chevron-left"></i> 如何成为一个牛掰的Java大神
+              <a href="/2016/10/14/java-properties/" rel="next" title="Properties配置文件读取相关java知识">
+                <i class="fa fa-chevron-left"></i> Properties配置文件读取相关java知识
               </a>
             
           </div>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2016/05/10/hello-world/" rel="prev" title="Hello World">
-                Hello World <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -441,10 +469,10 @@
 
     <div class="post-spread">
       
-        <div class="ds-share flat" data-thread-key="2016/04/23/test-md/"
-     data-title="test.md"
+        <div class="ds-share flat" data-thread-key="2016/10/18/github-maven-repository/"
+     data-title="利用GitHub搭建个人maven仓库"
      data-content=""
-     data-url="http://www.dongxiaoxia.xyz/2016/04/23/test-md/">
+     data-url="http://www.dongxiaoxia.xyz/2016/10/18/github-maven-repository/">
   <div class="ds-share-inline">
     <ul  class="ds-share-icons-16">
 
@@ -474,8 +502,8 @@
           
   <div class="comments" id="comments">
     
-      <div class="ds-thread" data-thread-key="2016/04/23/test-md/"
-           data-title="test.md" data-url="http://www.dongxiaoxia.xyz/2016/04/23/test-md/">
+      <div class="ds-thread" data-thread-key="2016/10/18/github-maven-repository/"
+           data-title="利用GitHub搭建个人maven仓库" data-url="http://www.dongxiaoxia.xyz/2016/10/18/github-maven-repository/">
       </div>
     
   </div>
@@ -595,7 +623,7 @@
               
             
             
-              <p class="post-toc-empty">此文章未包含目录</p>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#一-deploy项目到本地"><span class="nav-number">1.</span> <span class="nav-text">一.deploy项目到本地</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二-_提交项目到GitHub"><span class="nav-number">2.</span> <span class="nav-text">二.  提交项目到GitHub</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#三-在其他项目中引入该依赖"><span class="nav-number">3.</span> <span class="nav-text">三.在其他项目中引入该依赖</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#注意问题"><span class="nav-number">4.</span> <span class="nav-text">注意问题</span></a></li></ol></div>
             
           </div>
         </section>
