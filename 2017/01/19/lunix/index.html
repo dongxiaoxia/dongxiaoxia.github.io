@@ -1,0 +1,986 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css"/>
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.useso.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="lunix 部署 服务器," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/images/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="本篇文章主要围绕一个问题：本地开发完项目后如何简单部署到服务器？这个问题太宽泛了，因此，提出了以下几个要点：
+
+第一次怎么部署
+增量开发后怎么简单部署?
+服务器环境整体如何规划？各个项目怎么存放，日志是否集中存放 ？项目各个项目运行环境与部署怎么分开？。。。
+如何用脚本自动化部署？
+如何用几句话归纳部署？
+
+经过整篇文章，我想会有一定的答案。
+文章的各个章节并不是按照解决问题的顺序写的，而是按照环">
+<meta property="og:type" content="article">
+<meta property="og:title" content="服务器 JDK + Tomcat + Nginx 部署环境整体搭建及自动化部署的具体实现">
+<meta property="og:url" content="http://www.dongxiaoxia.xyz/2017/01/19/lunix/index.html">
+<meta property="og:site_name" content="东小侠">
+<meta property="og:description" content="本篇文章主要围绕一个问题：本地开发完项目后如何简单部署到服务器？这个问题太宽泛了，因此，提出了以下几个要点：
+
+第一次怎么部署
+增量开发后怎么简单部署?
+服务器环境整体如何规划？各个项目怎么存放，日志是否集中存放 ？项目各个项目运行环境与部署怎么分开？。。。
+如何用脚本自动化部署？
+如何用几句话归纳部署？
+
+经过整篇文章，我想会有一定的答案。
+文章的各个章节并不是按照解决问题的顺序写的，而是按照环">
+<meta property="og:updated_time" content="2017-01-19T03:40:41.887Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="服务器 JDK + Tomcat + Nginx 部署环境整体搭建及自动化部署的具体实现">
+<meta name="twitter:description" content="本篇文章主要围绕一个问题：本地开发完项目后如何简单部署到服务器？这个问题太宽泛了，因此，提出了以下几个要点：
+
+第一次怎么部署
+增量开发后怎么简单部署?
+服务器环境整体如何规划？各个项目怎么存放，日志是否集中存放 ？项目各个项目运行环境与部署怎么分开？。。。
+如何用脚本自动化部署？
+如何用几句话归纳部署？
+
+经过整篇文章，我想会有一定的答案。
+文章的各个章节并不是按照解决问题的顺序写的，而是按照环">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 6276589648156296000,
+      author: '博主'
+    }
+  };
+</script>
+
+  <title> 服务器 JDK + Tomcat + Nginx 部署环境整体搭建及自动化部署的具体实现 | 东小侠 </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//tajs.qq.com/stats?sId=55879611";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">东小侠</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">怕什么真理无穷 进一寸有进一寸的欢喜</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-home fa-fw"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-th fa-fw"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-archive fa-fw"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-tags fa-fw"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-user fa-fw"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-resume">
+          <a href="/resume" rel="section">
+            
+              <i class="menu-item-icon fa fa-book fa-fw"></i> <br />
+            
+            简历
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-something">
+          <a href="/something" rel="section">
+            
+              <i class="menu-item-icon fa fa-flash fa-fw"></i> <br />
+            
+            有料
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="#" class="st-search-show-outputs">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <form class="site-search-form">
+  <input type="text" id="st-search-input" class="st-search-input st-default-search-input" />
+</form>
+
+<script type="text/javascript">
+  (function(w,d,t,u,n,s,e){w['SwiftypeObject']=n;w[n]=w[n]||function(){
+    (w[n].q=w[n].q||[]).push(arguments);};s=d.createElement(t);
+    e=d.getElementsByTagName(t)[0];s.async=1;s.src=u;e.parentNode.insertBefore(s,e);
+  })(window,document,'script','//s.swiftypecdn.com/install/v2/st.js','_st');
+
+  _st('install', 'LEW-HJ8C4q4d2iL3MKNA','2.0.0');
+</script>
+
+
+
+    </div>
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                服务器 JDK + Tomcat + Nginx 部署环境整体搭建及自动化部署的具体实现
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2017-01-19T11:39:44+08:00" content="2017-01-19">
+              2017-01-19
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/linix/" itemprop="url" rel="index">
+                    <span itemprop="name">linix</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+		   <!-- 在下面的位置加上如下代码 -->
+  
+       <span id="busuanzi_container_page_pv">
+       &nbsp; | &nbsp; 热度&nbsp; <span id="busuanzi_value_page_pv"></span>°C
+       </span>
+       
+   <!-- 在上面的位置加上如上代码 --> 
+		  
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2017/01/19/lunix/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2017/01/19/lunix/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>本篇文章主要围绕一个问题：本地开发完项目后如何简单部署到服务器？<br>这个问题太宽泛了，因此，提出了以下几个要点：</p>
+<ol>
+<li>第一次怎么部署</li>
+<li>增量开发后怎么<code>简单</code>部署?</li>
+<li>服务器环境整体如何规划？各个项目怎么存放，日志是否集中存放 ？项目各个项目运行环境与部署怎么分开？。。。</li>
+<li>如何用脚本自动化部署？</li>
+<li>如何用几句话归纳部署？</li>
+</ol>
+<p>经过整篇文章，我想会有一定的答案。</p>
+<p>文章的各个章节并不是按照解决问题的顺序写的，而是按照环境部署、项目配置、自动化部署一步步递进的，完成服务器 JDK + Tomcat + Nginx 部署环境整体搭建及自动化部署的具体实现。</p>
+<h2 id="1-服务器环境整体规划">1.服务器环境整体规划</h2><p>在本篇文章的部署方式中，会涉及以下4个总目录</p>
+<pre><code><span class="number">1.</span> 项目目录 /opt/web
+<span class="number">2.</span> 日志目录 /opt/<span class="built_in">log</span>
+<span class="number">3.</span> JDK/Tomcat/Nginx等安装环境的父目录  /opt/soft
+<span class="number">4.</span> 项目应用war包上传到服务器的目录 /root/deploy
+</code></pre><h2 id="2-运行环境安装">2.运行环境安装</h2><h3 id="2-1_JDK">2.1 JDK</h3><ol>
+<li>官网下载 JDK8，解压到/opt/soft ，解压文件夹为jdk1.8.0_11</li>
+<li><p>配置 JDK 环境变量<br>在<code>/etc/profile</code>文件末尾添加以下配置 ：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#jdk enviroment</span></span><br><span class="line">JAVA_HOME=/opt/soft/jdk1.8.0_11/</span><br><span class="line">PATH=<span class="variable">$JAVA_HOME</span>/bin:<span class="variable">$PATH</span></span><br><span class="line">CLASSPATH=.:<span class="variable">$JAVA_HOME</span>/lib/dt.jar:<span class="variable">$JAVA_HOME</span>/lib/tools.jar</span><br><span class="line"><span class="built_in">export</span> JAVA_HOME</span><br><span class="line"><span class="built_in">export</span> PATH</span><br><span class="line"><span class="built_in">export</span> CLASSPATH</span><br></pre></td></tr></table></figure>
+<p>保存退出。终端执行命令<code>source /etc/profile</code>  使配置生效  </p>
+</li>
+<li>验证 JDK 配置<br>终端执行命令：<code>java -version</code><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">ubuntu<span class="comment"># java -version</span></span><br><span class="line">java version <span class="string">"1.8.0_111"</span></span><br><span class="line">Java(TM) SE Runtime Environment (build 1.8.0_111-b14)</span><br><span class="line">Java HotSpot(TM) 64-Bit Server VM (build 25.111-b14, mixed mode)</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<blockquote>
+<p><strong>JDK 配置成功！！！</strong></p>
+</blockquote>
+<h3 id="2-2_Tomcat">2.2 Tomcat</h3><ol>
+<li>官网下载tomcat，我这里下载的是apache-tomcat-7.0.73，解压到/opt/soft ，解压文件夹为apache-tomcat-7.0.73</li>
+<li>进入tomcat目录下的bin目录下，执行tomcat启动脚本（tomcat依赖jdk，应先确定jdk已经安装）<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">ubuntu<span class="comment"># sh startup.sh </span></span><br><span class="line">Using CATALINA_BASE:   /opt/soft/apache-tomcat-7.0.73</span><br><span class="line">Using CATALINA_HOME:   /opt/soft/apache-tomcat-7.0.73</span><br><span class="line">Using CATALINA_TMPDIR: /opt/soft/apache-tomcat-7.0.73/temp</span><br><span class="line">Using JRE_HOME:        /opt/soft/jdk1.8.0_11/</span><br><span class="line">Using CLASSPATH:       /opt/soft/apache-tomcat-7.0.73/bin/bootstrap.jar:/opt/soft/apache-tomcat-7.0.73/bin/tomcat-juli.jar</span><br><span class="line">Tomcat started.</span><br><span class="line">ubuntu<span class="comment">#</span></span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>出现以上信息证明tomcat已经成功启动，打开 <a href="http://ip:8080" target="_blank" rel="external">http://ip:8080</a> 或 <a href="http://localhost:8080" target="_blank" rel="external">http:/localhost:8080</a>,如果能看到tomcat系统界面，说明已经安装成功，可以进行下一步了。</p>
+<p> <strong>常见命令</strong></p>
+<blockquote>
+<p>启动tomcat ：sh startup.sh<br>关闭tomcat  ：sh shutdown.sh<br>查看tomcat运行进程 ： ps aux | grep tomcat 或 ps aux | grep java 或ps -ef | grep java  或 ps -ef | grep tomcat<br>查看端口使用情况   netstat –apn 或 netstat -tunlp  ，可以结合 grep ，如 netstat -apn | grep (端口号)  或 netstat -apn | grep java<br>其中最后一下为pid/program name ，如果端口被占用， 可以进一步使用命令：ps -ef  | grep (pid) 查看，可以查出是哪个进程占用了端口号，可以kill portId 杀死进程。</p>
+</blockquote>
+<h3 id="2-3_Nginx">2.3 Nginx</h3><p> 这里演示的系统为<code>Ubuntu</code></p>
+<p>Ubuntu平台编译环境安装<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">apt-get install build-essentail</span><br><span class="line">apt-get install libtool</span><br></pre></td></tr></table></figure></p>
+<p>安装Nginx依赖包 OpenSSL、zlib、 pcre<br>这三个包可以直接在终端下载，如果网速慢，建议在本地下载再上传到服务器。<br>安装Nginx依赖包<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apt-get install libpcre3 libpcre3-dev zlib1g-dev libssl-dev build-essential</span><br></pre></td></tr></table></figure></p>
+<p>选择下载保存目录 cd /opt/soft<br>下载OpenSSL<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wget ftp://ftp.openssl.org/<span class="built_in">source</span>/openssl-1.1.0c.tar.gz</span><br></pre></td></tr></table></figure></p>
+<p>下载zlib<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wget http://zlib.net/zlib128.zip</span><br></pre></td></tr></table></figure></p>
+<p>下载pcre<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wget ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/pcre-8.39.tar.gz</span><br></pre></td></tr></table></figure></p>
+<p>安装OpenSSL<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">tar zxvf openssl-1.0.0c.tar.gz</span><br><span class="line"><span class="built_in">cd</span> openssl-1.0.0c/</span><br><span class="line">./config --prefix=/opt/soft --openssldir=/opt/soft/ssl</span><br><span class="line">make &amp;&amp; make install</span><br><span class="line"></span><br><span class="line">./config shared --prefix=/opt/soft --openssldir=/opt/soft/ssl</span><br><span class="line">make clean</span><br><span class="line">make &amp;&amp; make install</span><br></pre></td></tr></table></figure></p>
+<p>安装zlib库<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">unzip zlib128.zip</span><br><span class="line"><span class="built_in">cd</span> zlib128/</span><br><span class="line">./configure --prefix=/opt/soft</span><br><span class="line">make &amp;&amp; make install</span><br></pre></td></tr></table></figure></p>
+<p>安装pcre库<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"> tar zxvf pcre-8.39.tar.gz</span><br><span class="line"><span class="built_in">cd</span> pcre-8.39/</span><br><span class="line">./configure --prefix=/opt/soft</span><br><span class="line">make &amp;&amp; make install</span><br></pre></td></tr></table></figure></p>
+<p> 查看pcre版本<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pcre-config --version</span><br></pre></td></tr></table></figure></p>
+<p>安装Nginx<br>1下载 Nginx，下载地址：<a href="http://nginx.org/download/nginx-1.6.2.tar.gz" target="_blank" rel="external">http://nginx.org/download/nginx-1.6.2.tar.gz</a><br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wget http://nginx.org/download/nginx-1.6.2.tar.gz</span><br></pre></td></tr></table></figure></p>
+<p>2解压安装包<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tar zxvf nginx-1.6.2.tar.gz</span><br></pre></td></tr></table></figure></p>
+<p>3进入安装包目录<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> nginx-1.6.2</span><br></pre></td></tr></table></figure></p>
+<p>4编译安装<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[root@bogon nginx-1.6.2]<span class="comment"># ./configure --prefix=/opt/soft/nginx --with-http_stub_status_module --with-http_ssl_module --with-pcre=/opt/soft/src/pcre-8.39</span></span><br><span class="line">[root@bogon nginx-1.6.2]<span class="comment"># make</span></span><br><span class="line">[root@bogon nginx-1.6.2]<span class="comment"># make install</span></span><br></pre></td></tr></table></figure></p>
+<p>5查看Nginx版本<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">/opt/soft/nginx/sbin/nginx -v</span><br><span class="line">nginx version: nginx/1.6.2</span><br></pre></td></tr></table></figure></p>
+<p>6启动nginx<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/opt/soft/nginx/sbin/nginx</span><br></pre></td></tr></table></figure></p>
+<blockquote>
+<p>到此，nginx安装成功</p>
+</blockquote>
+<p><strong>Nginx常用命令</strong></p>
+<blockquote>
+<p>/opt/soft/nginx/sbin/nginx -v                   #查看 Nginx版本<br>/opt/soft/nginx/sbin/nginx                       #启动 Nginx<br>/opt/soft/nginx/sbin/nginx -t                   # 检查配置文件ngnix.conf的正确性<br>/opt/soft/nginx/sbin/nginx -s reload        #重新载入配置文件<br>/opt/soft/nginx/sbin/nginx -s reopen       #重启 Nginx<br>/opt/soft/nginx/sbin/nginx -s stop           #停止 Nginx</p>
+</blockquote>
+<pre><code>jdk<span class="command">\tomcat</span><span class="command">\nginx</span> 安装完毕，查看服务器目录
+</code></pre><p>/opt/soft 目录下文件结构<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"> ➜  apache-tomcat-7.0.73 ll /opt/soft       </span><br><span class="line">总用量 8.4M</span><br><span class="line">drwxr-xr-x  9 root root 4.0K 12月 27 09:25 apache-tomcat-7.0.73</span><br><span class="line">drwxr-xr-x  2 root root 4.0K 12月 28 15:44 bin</span><br><span class="line">drwxr-xr-x  3 root root 4.0K 12月 28 15:38 include</span><br><span class="line">drwxr-xr-x  8 uucp  143 4.0K 6月  17  2014 jdk1.8.0_11</span><br><span class="line">drwxr-xr-x  4 root root 4.0K 12月 28 15:44 lib</span><br><span class="line">drwxr-xr-x 11 root root 4.0K 12月 28 16:22 nginx</span><br><span class="line">drwxr-xr-x  9 1001 1001 4.0K 12月 28 16:14 nginx-1.6.2</span><br><span class="line">-rwxr-xr-x  1 root root 786K 12月 28 16:13 nginx-1.6.2.tar.gz</span><br><span class="line">drwxr-xr-x 19 root root 4.0K 12月 28 16:05 openssl-1.1.0c</span><br><span class="line">-rwxr-xr-x  1 root root 5.0M 12月 28 15:34 openssl-1.1.0c.tar.gz</span><br><span class="line">drwxr-xr-x  9 1169 1169  12K 12月 28 16:15 pcre-8.39</span><br><span class="line">-rwxr-xr-x  1 root root 2.0M 12月 28 15:23 pcre-8.39.tar.gz</span><br><span class="line">drwxr-xr-x  4 root root 4.0K 12月 28 15:32 share</span><br><span class="line">drwxr-xr-x  5 root root 4.0K 12月 28 15:44 ssl</span><br><span class="line">drwxr-xr-x 14 root root 4.0K 12月 28 15:30 zlib-1.2.8</span><br><span class="line">-rwxr-xr-x  1 root root 679K 12月 28 15:28 zlib128.zip</span><br></pre></td></tr></table></figure></p>
+<h2 id="3-_Tomcat多实例多应用部署">3. Tomcat多实例多应用部署</h2><h3 id="3-1-_部署应用分类">3.1. 部署应用分类</h3><p><code>单实例单应用</code>：一个tomcat目录，webapps目录下只跑一个war包，最基本的部署方式。<br><code>单实例多应用</code>：一个tomcat目录，webapps目录下跑多个war包。 启动、关闭 tomcat对所有war包起作用。<br><code>多实例单应用</code>：多个tomcat目录，每个tomcat只跑一个应用，并且是同一个应用。通过修改tomcat端口配合nginx进行负载均衡。<br><code>多实例多应用</code>：把一个tomcat分为2部分，一部分为公用的bin目录与lib目录，其余文件夹作为第二部分，可以复制多次，因此tomcat只有一个，但是实例可以有多个，每个实例在单独部署，与单实例多应用相似。</p>
+<blockquote>
+<ol>
+<li>一个tomcat，充分利用资源，对tomcat的更新维护也很方便</li>
+<li>多个实例，各个实例互不影响</li>
+<li>各个项目相互独立，启动关闭不影响</li>
+<li>部署容易，启动快速<h3 id="3-2_目录结构认识">3.2 目录结构认识</h3>一个刚解压出来的tomcat打包文件应该有以下几个目录<br>bin:主要存放脚本文件，例如比较常用的windows和linux系统中启动和关闭脚本<br>conf:主要存放配置文件，其中最重要的两个配置文件是server.xml和web.xml<br>lib:主要存放tomcat运行所依赖的包<br>logs:主要存放运行时产生的日志文件，例如catalina.{date}.log等<br>temp:存放tomcat运行时产生的临时文件，例如开启了hibernate缓存的应用程序，会在该目录下生成一些文件<br>webapps:部署web应用程序的默认目录<br>work:主要存放由JSP文件生成的servlet（java文件以及最终编译生成的class文件）<h3 id="3-3_多实例原理">3.3 多实例原理</h3>tomcat中两个比较重要的概念（通常也是两个系统变量）——CATALINA_HOME和CATALINA_BASE：<ul>
+<li>CATALINA_HOME：即指向Tomcat安装路径的系统变量</li>
+<li>CATALINA_BASE：即指向活跃配置路径的系统变量</li>
+</ul>
+</li>
+</ol>
+</blockquote>
+<p>通过设置这两个变量，就可以将tomcat的安装目录和工作目录分离，从而实现tomcat多实例的部署。</p>
+<p>Tomcat官方文档指出，CATALINA_HOME路径的路径下只需要包含bin和lib目录，这也就是支持tomcat软件运行的目录，而CATALINA_BASE设置的路径可以包括上述所有目录，不过其中bin和lib目录并不是必需的，缺省时会使用CATALINA_HOME中的bin和conf。如此，我们就可以使用一个tomcat安装目录部署多个tomcat实例，这样的好处在于方便升级，就可以在不影响tomcat实例的前提下，替换掉CATALINA_HOME指定的tomcat安装目录。</p>
+<p>简而言之：</p>
+<ul>
+<li>CATALINA_HOME：bin      lib</li>
+<li>CATALINA_BASE：conf      webapps      temp      logs      work</li>
+</ul>
+<blockquote>
+<p><strong>server.xml</strong></p>
+</blockquote>
+<p>这里部署多实例要修改的两个端口：</p>
+<ul>
+<li>Server Port：该端口用于监听关闭tomcat的shutdown命令，默认为8005</li>
+<li>Connector Port：该端口用于监听HTTP的请求，默认为8080</li>
+</ul>
+<p>简单的多实例只需要保证多实例中的Server Port和Connect Port不同即可。</p>
+<p>另外要修改的是Host配置，Host就是所谓的虚拟主机，对应包含了一个或者多个web应用程序。其中：</p>
+<ul>
+<li>name： 虚拟主机的名称，一台主机表示了完全限定的域名或IP地址，默认为localhost，同时也是唯一的host，进入tomcat的所有http请求都会映射到该主机上</li>
+<li>appBase：web应用程序目录的路径，可以是CATALINA_HOME的相对路径，也可以写成绝对路径，默认情况下为$CATALINA_HOME/webapps</li>
+<li>unpackWARs： 表示是否自动解压war包</li>
+<li>autoDeploy：所谓的热部署，即在tomcat正在运行的情况下，如果有新的war加入，则会立即执行部署操作</li>
+<li>另外再介绍一个Host中的属性—deployOnStartup：表示tomcat启动时是否自动部署appBase目录下所有的Web应用程序，默认为true。这个属性和autoDeploy会产生两次部署的“副作用”：一次是tomcat启动时就开始部署，第二次就是autoDeploy引起的热部署。因此最好将autoDeploy置为false</li>
+</ul>
+<p>最后再说明一下Context的配置，它出现在Host配置内，一个Context的配置就代表了一个web应用程序，如果配置多应用程序，就需要在Host下配置多个Context。其中：</p>
+<ul>
+<li>path：表示访问入口，例如，path=”/abc”，则访问localhost:8080/abc时，就可以访问该Context对应的应用程序。如果path=””，则直接用localhost:8080就可以访问。</li>
+<li>docBase：表示应用程序的解包目录或者war文件路径，是Host的appBase配置目录的相对路径，也可以是直接写成绝对路径，但是不要将appBase的值，作为docBase配置路径的前缀，例如appBase=”somedir”，docBase=”somedir-someapp.war”，这样的配置会导致部署错误。</li>
+</ul>
+<h3 id="3-4_多实例多应用部署">3.4 多实例多应用部署</h3><p>假设一个完好的可以运行的web应用程序已经打包成test.war，放在/root/deploy/test目录下，其中包含一个简单的index.jsp<br><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">h2</span>&gt;</span>Hello World!<span class="tag">&lt;/<span class="name">h2</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
+<h4 id="创建tomcat实例">创建tomcat实例</h4><p>之前我们已经在/opt/soft/下成功安装了tomcat<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ubuntu<span class="comment"># ls /opt/soft/apache-tomcat-7.0.73</span></span><br><span class="line">bin  conf  lib    LICENSE  logs  NOTICE  RELEASE-NOTES  RUNNING.txt  temp  webapps  work</span><br></pre></td></tr></table></figure></p>
+<p>我们的实例目录放在/opt/web/test 下<br>复制相关实例文件夹到该目录下<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ubuntu<span class="comment"># ls /opt/web/test</span></span><br><span class="line">conf  debug.sh	logs  restart.sh  run.sh  stop.sh  webapps  work</span><br></pre></td></tr></table></figure></p>
+<p>其中run.sh 、stop.sh、debug.sh、restart.sh 脚本文件本不属于tomcat实例的，是为了方便启动、停止tomcat实例而创建的脚本</p>
+<h4 id="创建启停脚本">创建启停脚本</h4><p>run.sh 脚本文件内容：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/sh</span></span><br><span class="line">TOMCAT_HOME=/opt/soft/apache-tomcat-7.0.73</span><br><span class="line">CATALINA_BASE=$(<span class="built_in">cd</span> <span class="string">"<span class="variable">$(dirname $0)</span>"</span>; <span class="built_in">pwd</span>)</span><br><span class="line">CATALINA_PID=<span class="variable">$CATALINA_BASE</span>/tomcat.pid</span><br><span class="line">JAVA_HOME=/opt/soft/jdk1.8.0_11/</span><br><span class="line">CLASSPATH=<span class="variable">$CLASSPATH</span>:<span class="variable">$JAVA_HOME</span>/lib:<span class="variable">$JAVA_HOME</span>/jre/lib</span><br><span class="line">LD_LIBRARY_PATH=<span class="variable">$LD_LIBRARY_PATH</span>:/usr/<span class="built_in">local</span>/apr/lib</span><br><span class="line">PATH=<span class="variable">$PATH</span>:<span class="variable">$JAVA_HOME</span>/bin</span><br><span class="line"></span><br><span class="line"><span class="comment">#路径为【/opt/web/xxx】时，项目名则为【xxx】</span></span><br><span class="line">PROJECT_NAME=`<span class="built_in">echo</span> <span class="variable">$CATALINA_BASE</span> | awk -F <span class="string">"/"</span> <span class="string">'&#123;print $NF&#125;'</span>`</span><br><span class="line"></span><br><span class="line"><span class="comment">#检测temp目录是否存在，不存在则创建</span></span><br><span class="line"><span class="keyword">if</span> [ ! <span class="_">-d</span> <span class="string">"<span class="variable">$CATALINA_BASE</span>/temp"</span> ]; <span class="keyword">then</span></span><br><span class="line">    mkdir <span class="string">"<span class="variable">$CATALINA_BASE</span>/temp"</span></span><br><span class="line"><span class="keyword">fi</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#日志目录名</span></span><br><span class="line">PROJECT_LOG=/opt/<span class="built_in">log</span>/<span class="variable">$PROJECT_NAME</span>/catalina.out</span><br><span class="line"></span><br><span class="line">JAVA_OPTS=<span class="string">"-server -Xms32m -Xmx512m -Xmn32m -Xss1024K -XX:PermSize=32m -XX:MaxPermSize=64m -XX:ParallelGCThreads=32 -XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:+UseCMSCompactAtFullCollection -XX:SurvivorRatio=4 -XX:MaxTenuringThreshold=10 -XX:CMSInitiatingOccupancyFraction=80"</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">export</span> TOMCAT_HOME CATALINA_BASE CATALINA_PID JAVA_HOME CLASSPATH PATH JAVA_OPTS PROJECT_NAME PROJECT_LOG LD_LIBRARY_PATH</span><br><span class="line"></span><br><span class="line">proj_dir=<span class="variable">$CATALINA_BASE</span></span><br><span class="line"><span class="keyword">if</span> [ -n <span class="string">"<span class="variable">$proj_dir</span>"</span> ]</span><br><span class="line"><span class="keyword">then</span></span><br><span class="line">        ps aux | grep <span class="string">"<span class="variable">$proj_dir</span>"</span> | grep -v <span class="string">"grep"</span> | grep -v <span class="string">"<span class="variable">$CATALINA_BASE</span>/\(start.sh\|stop.sh\|restart.sh\|logs/catalina.out\)"</span> &gt; /dev/null</span><br><span class="line">        status=$?</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span>  [ <span class="variable">$status</span> <span class="_">-eq</span> 0 ] &amp;&amp; [ <span class="_">-s</span> <span class="variable">$CATALINA_PID</span>  ]</span><br><span class="line">        <span class="keyword">then</span></span><br><span class="line">                <span class="built_in">echo</span> <span class="string">"The <span class="variable">$proj_dir</span> tomcat is running and the pid_file is exist !"</span></span><br><span class="line">                <span class="built_in">exit</span> 1</span><br><span class="line">        <span class="keyword">elif</span> [ <span class="variable">$status</span> <span class="_">-eq</span> 0 ] || [ <span class="_">-s</span> <span class="variable">$CATALINA_PID</span>  ]</span><br><span class="line">        <span class="keyword">then</span></span><br><span class="line">                <span class="built_in">echo</span> <span class="string">"kill one"</span></span><br><span class="line">                ps aux | grep <span class="string">"<span class="variable">$proj_dir</span>"</span> | grep -v <span class="string">"grep"</span> | grep -v <span class="string">"<span class="variable">$CATALINA_BASE</span>/\(start.sh\|stop.sh\|restart.sh\|logs/catalina.out\)"</span> | awk <span class="string">'&#123;print $2&#125;'</span> | xargs -i <span class="built_in">kill</span> -9 &#123;&#125;</span><br><span class="line">                &gt; <span class="variable">$CATALINA_PID</span></span><br><span class="line">                <span class="variable">$TOMCAT_HOME</span>/bin/catalina.sh start</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">                <span class="variable">$TOMCAT_HOME</span>/bin/catalina.sh start</span><br><span class="line">        <span class="keyword">fi</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">"start failt!!!"</span></span><br><span class="line">        <span class="built_in">exit</span> 1</span><br><span class="line"><span class="keyword">fi</span></span><br></pre></td></tr></table></figure></p>
+<p>stop.sh脚本内容<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/sh</span></span><br><span class="line">TOMCAT_HOME=/opt/soft/apache-tomcat-7.0.73</span><br><span class="line"><span class="comment">#CATALINA_BASE=/opt/web/test</span></span><br><span class="line">CATALINA_BASE=$(<span class="built_in">cd</span> <span class="string">"<span class="variable">$(dirname $0)</span>"</span>; <span class="built_in">pwd</span>)</span><br><span class="line">CATALINA_PID=<span class="variable">$CATALINA_BASE</span>/tomcat.pid</span><br><span class="line">JAVA_HOME=/opt/soft/jdk1.8.0_11/</span><br><span class="line">CLASSPATH=<span class="variable">$CLASSPATH</span>:<span class="variable">$JAVA_HOME</span>/lib:<span class="variable">$JAVA_HOME</span>/jre/lib</span><br><span class="line">PATH=<span class="variable">$PATH</span>:<span class="variable">$JAVA_HOME</span>/bin</span><br><span class="line"></span><br><span class="line"><span class="comment">#路径为【/opt/web/xxx】时，项目名则为【xxx】</span></span><br><span class="line">PROJECT_NAME=`<span class="built_in">echo</span> <span class="variable">$CATALINA_BASE</span> | awk -F <span class="string">"/"</span> <span class="string">'&#123;print $NF&#125;'</span>`</span><br><span class="line"><span class="built_in">echo</span> <span class="variable">$PROJECT_NAME</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#日志目录名</span></span><br><span class="line">PROJECT_LOG=/opt/<span class="built_in">log</span>/<span class="variable">$PROJECT_NAME</span>/</span><br><span class="line"></span><br><span class="line"><span class="built_in">export</span> TOMCAT_HOME CATALINA_BASE CATALINA_PID JAVA_HOME CLASSPATH PATH JAVA_OPTS PROJECT_NAME PROJECT_LOG</span><br><span class="line"></span><br><span class="line">proj_dir=<span class="variable">$CATALINA_BASE</span></span><br><span class="line"><span class="variable">$TOMCAT_HOME</span>/bin/catalina.sh stop</span><br><span class="line">sleep 5</span><br><span class="line"><span class="keyword">if</span> [ -n <span class="string">"<span class="variable">$proj_dir</span>"</span> ]</span><br><span class="line"><span class="keyword">then</span></span><br><span class="line">        ps aux | grep <span class="string">"<span class="variable">$proj_dir</span>"</span> | grep -v <span class="string">"grep"</span> | grep -v <span class="string">"<span class="variable">$CATALINA_BASE</span>/\(start.sh\|stop.sh\|restart.sh\|logs/catalina.out\)"</span> &gt; /dev/null</span><br><span class="line">        status=$?</span><br><span class="line">        <span class="keyword">if</span> [ <span class="variable">$status</span> <span class="_">-eq</span> 0 ] || [ <span class="_">-s</span> <span class="variable">$CATALINA_PID</span>  ]</span><br><span class="line">        <span class="keyword">then</span></span><br><span class="line">                <span class="built_in">echo</span> <span class="string">"kill it"</span></span><br><span class="line">                ps aux | grep <span class="string">"<span class="variable">$proj_dir</span>"</span> | grep -v <span class="string">"grep"</span> | grep -v <span class="string">"<span class="variable">$CATALINA_BASE</span>/\(start.sh\|stop.sh\|restart.sh\|logs/catalina.out\)"</span> |  awk <span class="string">'&#123;print $2&#125;'</span> | xargs -i <span class="built_in">kill</span> -9 &#123;&#125;</span><br><span class="line">                &gt; <span class="variable">$CATALINA_PID</span></span><br><span class="line">        <span class="keyword">fi</span></span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">"stop failt!!!"</span></span><br><span class="line">        <span class="built_in">exit</span> 1</span><br><span class="line"><span class="keyword">fi</span></span><br></pre></td></tr></table></figure></p>
+<p>debug.sh 脚本内容<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/sh</span></span><br><span class="line">TOMCAT_HOME=/opt/soft/apache-tomcat-7.0.73</span><br><span class="line">CATALINA_BASE=$(<span class="built_in">cd</span> <span class="string">"<span class="variable">$(dirname $0)</span>"</span>; <span class="built_in">pwd</span>)</span><br><span class="line">CATALINA_PID=<span class="variable">$CATALINA_BASE</span>/tomcat.pid</span><br><span class="line">JAVA_HOME=/opt/soft/jdk1.8.0_11/</span><br><span class="line">CLASSPATH=<span class="variable">$CLASSPATH</span>:<span class="variable">$JAVA_HOME</span>/lib:<span class="variable">$JAVA_HOME</span>/jre/lib</span><br><span class="line">LD_LIBRARY_PATH=<span class="variable">$LD_LIBRARY_PATH</span>:/usr/<span class="built_in">local</span>/apr/lib</span><br><span class="line">PATH=<span class="variable">$PATH</span>:<span class="variable">$JAVA_HOME</span>/bin</span><br><span class="line"></span><br><span class="line"><span class="comment">#路径为【/opt/web/xxx】时，项目名则为【xxx】</span></span><br><span class="line">PROJECT_NAME=`<span class="built_in">echo</span> <span class="variable">$CATALINA_BASE</span> | awk -F <span class="string">"/"</span> <span class="string">'&#123;print $NF&#125;'</span>`</span><br><span class="line"></span><br><span class="line"><span class="comment">#日志目录名</span></span><br><span class="line">PROJECT_LOG=/opt/<span class="built_in">log</span>/<span class="variable">$PROJECT_NAME</span>/catalina.out</span><br><span class="line"></span><br><span class="line">JAVA_OPTS=<span class="string">"-server -Xms32m -Xmx512m -Xmn32m -Xss1024K -XX:PermSize=32m -XX:MaxPermSize=64m -XX:ParallelGCThreads=32 -XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:+UseCMSCompactAtFullCollection -XX:SurvivorRatio=4 -XX:MaxTenuringThreshold=10 -XX:CMSInitiatingOccupancyFraction=80"</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">export</span> TOMCAT_HOME CATALINA_BASE CATALINA_PID JAVA_HOME CLASSPATH PATH JAVA_OPTS PROJECT_NAME PROJECT_LOG LD_LIBRARY_PATH</span><br><span class="line"></span><br><span class="line">proj_dir=<span class="variable">$CATALINA_BASE</span></span><br><span class="line"><span class="keyword">if</span> [[ -n <span class="string">"<span class="variable">$proj_dir</span>"</span> ]]</span><br><span class="line"><span class="keyword">then</span></span><br><span class="line">        ps aux | grep <span class="string">"<span class="variable">$proj_dir</span>"</span> | grep -v <span class="string">"grep"</span> | grep -v <span class="string">"<span class="variable">$CATALINA_BASE</span>/\(start.sh\|stop.sh\|restart.sh\|logs/catalina.out\)"</span> &gt; /dev/null</span><br><span class="line">        status=$?</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span>  [[ <span class="variable">$status</span> <span class="_">-eq</span> 0 ]] &amp;&amp; [[ <span class="_">-s</span> <span class="variable">$CATALINA_PID</span>  ]]</span><br><span class="line">        <span class="keyword">then</span></span><br><span class="line">                <span class="built_in">echo</span> <span class="string">"The <span class="variable">$proj_dir</span> tomcat is running and the pid_file is exist !"</span></span><br><span class="line">                <span class="built_in">exit</span> 1</span><br><span class="line">        <span class="keyword">elif</span> [[ <span class="variable">$status</span> <span class="_">-eq</span> 0 ]] || [[ <span class="_">-s</span> <span class="variable">$CATALINA_PID</span>  ]]</span><br><span class="line">        <span class="keyword">then</span></span><br><span class="line">                <span class="built_in">echo</span> <span class="string">"kill one"</span></span><br><span class="line">                ps aux | grep <span class="string">"<span class="variable">$proj_dir</span>"</span> | grep -v <span class="string">"grep"</span> | grep -v <span class="string">"<span class="variable">$CATALINA_BASE</span>/\(start.sh\|stop.sh\|restart.sh\|logs/catalina.out\)"</span> | awk <span class="string">'&#123;print $2&#125;'</span> | xargs -i <span class="built_in">kill</span> -9 &#123;&#125;</span><br><span class="line">                &gt; <span class="variable">$CATALINA_PID</span></span><br><span class="line">                <span class="variable">$TOMCAT_HOME</span>/bin/catalina.sh jpda start</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">                <span class="variable">$TOMCAT_HOME</span>/bin/catalina.sh jpda start</span><br><span class="line">        <span class="keyword">fi</span></span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">"start failt!!!"</span></span><br><span class="line">        <span class="built_in">exit</span> 1</span><br><span class="line"><span class="keyword">fi</span></span><br></pre></td></tr></table></figure></p>
+<p>restart.sh 脚本内容<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/sh</span></span><br><span class="line">TOMCAT_HOME=/opt/soft/apache-tomcat-7.0.73</span><br><span class="line">CATALINA_BASE=$(<span class="built_in">cd</span> <span class="string">"<span class="variable">$(dirname $0)</span>"</span>; <span class="built_in">pwd</span>)</span><br><span class="line">CATALINA_PID=<span class="variable">$CATALINA_BASE</span>/tomcat.pid</span><br><span class="line">JAVA_HOME=/opt/soft/jdk/1.8.11/jdk1.8.0_11</span><br><span class="line">CLASSPATH=<span class="variable">$CLASSPATH</span>:<span class="variable">$JAVA_HOME</span>/lib:<span class="variable">$JAVA_HOME</span>/jre/lib</span><br><span class="line">PATH=<span class="variable">$PATH</span>:<span class="variable">$JAVA_HOME</span>/bin</span><br><span class="line">JAVA_OPTS=<span class="string">"-server -Xms1g -Xmx1g -Xmn512m -Xss1024K -XX:PermSize=256m -XX:MaxPermSize=512m -XX:ParallelGCThreads=8 -XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:+UseCMSCompactAtFullCollection -XX:SurvivorRatio=4 -XX:MaxTenuringThreshold=10 -XX:CMSInitiatingOccupancyFraction=80"</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#路径为【/opt/web/xxx】时，项目名则为【xxx】</span></span><br><span class="line">PROJECT_NAME=`<span class="built_in">echo</span> <span class="variable">$CATALINA_BASE</span> | awk -F <span class="string">"/"</span> <span class="string">'&#123;print $NF&#125;'</span>`</span><br><span class="line"></span><br><span class="line"><span class="comment">#日志目录名</span></span><br><span class="line">PROJECT_LOG=/opt/<span class="built_in">log</span>/<span class="variable">$PROJECT_NAME</span>/catalina.out</span><br><span class="line"></span><br><span class="line"><span class="built_in">export</span> TOMCAT_HOME CATALINA_BASE CATALINA_PID JAVA_HOME CLASSPATH PATH JAVA_OPTS PROJECT_NAME PROJECT_LOG</span><br><span class="line"></span><br><span class="line">sh <span class="variable">$CATALINA_BASE</span>/stop.sh</span><br><span class="line">sh <span class="variable">$CATALINA_BASE</span>/start.sh</span><br></pre></td></tr></table></figure></p>
+<h4 id="修改conf文件夹下的server-xml">修改conf文件夹下的server.xml</h4><p>把对应的Host节点修改为下面的内容，并修改相关的路径<br><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">Host</span> <span class="attr">name</span>=<span class="string">"localhost"</span>  <span class="attr">appBase</span>=<span class="string">"/opt/web/test/webapps"</span> <span class="attr">autoDeploy</span>=<span class="string">"false"</span> <span class="attr">deployOnStartup</span>=<span class="string">"false"</span>&gt;</span></span><br><span class="line">     <span class="tag">&lt;<span class="name">Context</span> <span class="attr">path</span>=<span class="string">""</span> <span class="attr">docBase</span>=<span class="string">"/opt/web/test/webapps"</span> <span class="attr">crossContext</span>=<span class="string">"true"</span> <span class="attr">allowLinking</span>=<span class="string">"true"</span><span class="attr">reloadable</span>=<span class="string">"false"</span>&gt;</span></span><br><span class="line">         <span class="tag">&lt;<span class="name">JarScanner</span> <span class="attr">scanAllDirectories</span>=<span class="string">"true"</span> /&gt;</span></span><br><span class="line">         <span class="tag">&lt;<span class="name">Valve</span> <span class="attr">className</span>=<span class="string">"org.apache.catalina.valves.AccessLogValve"</span> <span class="attr">directory</span>=<span class="string">"/opt/web/test/logs/"</span> <span class="attr">prefix</span>=<span class="string">"gh_access_log."</span> <span class="attr">suffix</span>=<span class="string">".log"</span> <span class="attr">pattern</span>=<span class="string">"%a %A %t %S %b %r %s %&#123;Referer&#125;i %&#123;User-Agent&#125;i %D"</span> <span class="attr">resolveHosts</span>=<span class="string">"false"</span> /&gt;</span></span><br><span class="line">     <span class="tag">&lt;/<span class="name">Context</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">Host</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
+<p>除此之外，可选的修改Server的端口号以及Connector的端口号。<br>一个实例就这样完成，以后每次想要部署一个项目，就可以简单的复制这个实例文件夹，修改一下配置，就行了。</p>
+<p>注意：复制tomcat实例的时候webapps下面可能已经存在其他项目的文件，我们要清空webapps，然后把test.war解压到webapps下面，而不是直接放war包。</p>
+<p>我们再创建一个项目为test1</p>
+<h4 id="现在我们的目录结构如下:">现在我们的目录结构如下:</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">ubuntu<span class="comment"># ls test test1</span></span><br><span class="line"><span class="built_in">test</span>:</span><br><span class="line">conf  debug.sh	logs  restart.sh  run.sh  stop.sh  webapps  work</span><br><span class="line"></span><br><span class="line"><span class="built_in">test</span>1:</span><br><span class="line">conf  debug.sh	logs  restart.sh  run.sh  stop.sh  webapps  work</span><br></pre></td></tr></table></figure>
+<h4 id="启动tomcat多实例">启动tomcat多实例</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line">ubuntu<span class="comment"># test/run.sh</span></span><br><span class="line">Using CATALINA_BASE:   /opt/web/<span class="built_in">test</span></span><br><span class="line">Using CATALINA_HOME:   /opt/soft/apache-tomcat-7.0.73</span><br><span class="line">Using CATALINA_TMPDIR: /opt/web/<span class="built_in">test</span>/temp</span><br><span class="line">Using JRE_HOME:        /opt/soft/jdk1.8.0_11/</span><br><span class="line">Using CLASSPATH:       /opt/soft/apache-tomcat-7.0.73/bin/bootstrap.jar:/opt/soft/apache-tomcat-7.0.73/bin/tomcat-juli.jar</span><br><span class="line">Using CATALINA_PID:    /opt/web/<span class="built_in">test</span>/tomcat.pid</span><br><span class="line">Tomcat started.</span><br><span class="line">ubuntu<span class="comment"># test1/run.sh</span></span><br><span class="line">Using CATALINA_BASE:   /opt/web/<span class="built_in">test</span>1</span><br><span class="line">Using CATALINA_HOME:   /opt/soft/apache-tomcat-7.0.73</span><br><span class="line">Using CATALINA_TMPDIR: /opt/web/<span class="built_in">test</span>1/temp</span><br><span class="line">Using JRE_HOME:        /opt/soft/jdk1.8.0_11/</span><br><span class="line">Using CLASSPATH:       /opt/soft/apache-tomcat-7.0.73/bin/bootstrap.jar:/opt/soft/apache-tomcat-7.0.73/bin/tomcat-juli.jar</span><br><span class="line">Using CATALINA_PID:    /opt/web/<span class="built_in">test</span>1/tomcat.pid</span><br><span class="line">Tomcat started.</span><br><span class="line">ubuntu<span class="comment"># netstat -tunlp</span></span><br><span class="line">激活Internet连接 (仅服务器)</span><br><span class="line">Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name</span><br><span class="line">tcp        0      0 127.0.1.1:53            0.0.0.0:*               LISTEN      7237/dnsmasq   </span><br><span class="line">tcp6       0      0 :::8080                 :::*                    LISTEN      10182/java     </span><br><span class="line">tcp6       0      0 127.0.0.1:8005          :::*                    LISTEN      10258/java     </span><br><span class="line">tcp6       0      0 :::8070                 :::*                    LISTEN      10258/java     </span><br><span class="line">tcp6       0      0 127.0.0.1:8006          :::*                    LISTEN      10182/java     </span><br><span class="line">tcp6       0      0 :::8009                 :::*                    LISTEN      10182/java     </span><br><span class="line">udp        0      0 0.0.0.0:57782           0.0.0.0:*                           7062/avahi-daemon:</span><br><span class="line">udp        0      0 0.0.0.0:49141           0.0.0.0:*                           7237/dnsmasq   </span><br><span class="line">udp        0      0 0.0.0.0:41976           0.0.0.0:*                           7237/dnsmasq   </span><br><span class="line">udp        0      0 127.0.1.1:53            0.0.0.0:*                           7237/dnsmasq   </span><br><span class="line">udp        0      0 0.0.0.0:68              0.0.0.0:*                           9541/dhclient   </span><br><span class="line">udp        0      0 0.0.0.0:48730           0.0.0.0:*                           7237/dnsmasq   </span><br><span class="line">udp        0      0 0.0.0.0:631             0.0.0.0:*                           7120/cups-browsed</span><br><span class="line">udp        0      0 0.0.0.0:47809           0.0.0.0:*                           7237/dnsmasq   </span><br><span class="line">udp        0      0 0.0.0.0:5353            0.0.0.0:*                           7062/avahi-daemon:</span><br><span class="line">udp        0      0 0.0.0.0:36600           0.0.0.0:*                           7237/dnsmasq   </span><br><span class="line">udp6       0      0 :::46484                :::*                                7062/avahi-daemon:</span><br><span class="line">udp6       0      0 :::5353                 :::*                                7062/avahi-daemon:</span><br><span class="line">ubuntu<span class="comment">#</span></span><br></pre></td></tr></table></figure>
+<p>可以看到8081，8082，8083等其他端口都已经启动，现在可以使用curl命令进行访问<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">ubuntu<span class="comment"># curl localhost:8080</span></span><br><span class="line"></span><br><span class="line">&lt;html&gt;</span><br><span class="line">&lt;head&gt;</span><br><span class="line">    &lt;meta charset=<span class="string">"utf-8"</span>&gt;</span><br><span class="line">&lt;/head&gt;</span><br><span class="line">&lt;body&gt;</span><br><span class="line">&lt;h2&gt;Hello World!&lt;/h2&gt;</span><br><span class="line">&lt;h2&gt;Test 项目!&lt;/h2&gt;</span><br><span class="line">&lt;/body&gt;</span><br><span class="line">&lt;/html&gt;</span><br><span class="line">ubuntu<span class="comment"># curl localhost:8070</span></span><br><span class="line"></span><br><span class="line">&lt;html&gt;</span><br><span class="line">&lt;head&gt;</span><br><span class="line">    &lt;meta charset=<span class="string">"utf-8"</span>&gt;</span><br><span class="line">&lt;/head&gt;</span><br><span class="line">&lt;body&gt;</span><br><span class="line">&lt;h2&gt;Hello World!&lt;/h2&gt;</span><br><span class="line">&lt;h2&gt;Test 项目!&lt;/h2&gt;</span><br><span class="line">&lt;/body&gt;</span><br><span class="line">&lt;/html&gt;</span><br><span class="line">ubuntu<span class="comment">#</span></span><br></pre></td></tr></table></figure></p>
+<p>多实例部署成功，以后可以简单的复制其中一个实例，修改相关配置即可。</p>
+<h2 id="4-_Nginx配置">4. Nginx配置</h2><p>本篇文章重点不在Nginx,简单带过。</p>
+<p>在配置文件nginx.conf下的http节点中，引入了两行代码</p>
+<figure class="highlight profile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">http</span><br><span class="line">        &#123;</span><br><span class="line">                include       mime.types;</span><br><span class="line">                default_type  application/octet-stream;</span><br><span class="line"></span><br><span class="line">	            ......</span><br><span class="line">	            ......</span><br><span class="line">	            ......</span><br><span class="line"></span><br><span class="line">                #在以下两个文件具体配置</span><br><span class="line">                include /usr/local/nginx/conf/conf.d/upstream.conf;</span><br><span class="line">                include /usr/local/nginx/conf/conf.d/ld.conf;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>因此每个项目站点的具体配置是在<code>upstream.conf</code>与<code>ld.conf</code>中配置的。</p>
+<p>其中<code>ld.conf</code>下配置的是具体站点的server 站点映射关系<br><figure class="highlight profile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">......</span><br><span class="line">other server</span><br><span class="line">......</span><br><span class="line"></span><br><span class="line">server  &#123;</span><br><span class="line">    listen  <span class="number">80</span>;</span><br><span class="line">    server_name  www.dongxiaoxia.xyz;</span><br><span class="line">    server_name_in_redirect off;</span><br><span class="line">    client_header_timeout  30;</span><br><span class="line">    client_body_timeout  30;</span><br><span class="line">    charset  UTF-8;</span><br><span class="line">    client_max_body_size  10000k;</span><br><span class="line">    allow  all;</span><br><span class="line"></span><br><span class="line">  location / &#123;</span><br><span class="line">        index   index.html index.php index.jsp index.htm;</span><br><span class="line">        proxy_pass      http://test_pool;</span><br><span class="line">        proxy_redirect  off;</span><br><span class="line">        proxy_set_header Host $host;</span><br><span class="line">        proxy_set_header CURRENT_URL http://$Host$request_uri;</span><br><span class="line">        proxy_set_header X-USER_IP $remote_addr;</span><br><span class="line">        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">    &#125;</span><br><span class="line">  access_log  /opt/web/test/logs/test.log  main;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">......</span><br><span class="line">......</span><br></pre></td></tr></table></figure></p>
+<p>其中<code>upstream.conf</code>下配置的是具体站点的 pool 映射关系</p>
+<figure class="highlight profile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">......</span><br><span class="line">other pool</span><br><span class="line">......</span><br><span class="line"></span><br><span class="line">upstream test_pool &#123;</span><br><span class="line">        server <span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span>:<span class="number">8303</span> weight=<span class="number">15</span> max_fails=<span class="number">2</span> fail_timeout=<span class="number">30</span>s;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">......</span><br><span class="line">......</span><br></pre></td></tr></table></figure>
+<p>需要注意的是，在修改了Nginx配置文件后，一定要执行<code>/opt/soft/nginx/sbin/nginx -s reload</code>重新加载配置 </p>
+<h2 id="5-_自动化部署脚本">5. 自动化部署脚本</h2><p> 服务器每次部署都要拷贝war包到服务器，停止服务器，再开启服务器，不太方便；而且服务器的配置文件应该相对于开发环境不太容易变动，或者开发人员根本无法得知服务器配置信息，因此带来另两个不好的原因，war包整体覆盖会有问题，war包体积太大。因此本地打包war包时要去掉相应文件， 服务器也要相应处理。 </p>
+<p>假设场景：本地编译打包项目war包。假如项目名为test，war包为test.war，部署时要求去除日志文件、项目配置文件、以及依赖的外部jar包。</p>
+<p>因此在项目根目录下创建<code>deploy.bat</code> 脚本，内容为：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">@<span class="built_in">echo</span> off</span><br><span class="line"></span><br><span class="line"><span class="built_in">echo</span> ...............................................................................................................................................................</span><br><span class="line"><span class="built_in">echo</span> This shell script does not put lib directory into package. If you want to, please just upload <span class="string">'test.war'</span> <span class="keyword">in</span> target directory.</span><br><span class="line"><span class="built_in">echo</span> ...............................................................................................................................................................</span><br><span class="line"></span><br><span class="line"><span class="built_in">set</span> SVN_ROOT=D:\svn\<span class="built_in">test</span></span><br><span class="line"><span class="built_in">set</span> TARGET_PATH=%SVN_ROOT%\target\<span class="built_in">test</span></span><br><span class="line"><span class="built_in">set</span> DEPLOY=%SVN_ROOT%\deploy</span><br><span class="line"></span><br><span class="line">rd /s /q %DEPLOY%</span><br><span class="line">md %DEPLOY%</span><br><span class="line"><span class="built_in">echo</span> %TARGET_PATH%</span><br><span class="line">xcopy %TARGET_PATH%\* %DEPLOY%\ /s /e</span><br><span class="line">rd /s /q %DEPLOY%\WEB-INF\lib</span><br><span class="line">del /f /s /q %DEPLOY%\WEB-INF\classes\test.properties</span><br><span class="line">del /f /s /q %DEPLOY%\WEB-INF\classes\<span class="built_in">log</span>4j.properties</span><br><span class="line"></span><br><span class="line"><span class="built_in">cd</span> /d %DEPLOY%</span><br><span class="line"></span><br><span class="line">jar -cvf test.war *</span><br><span class="line"></span><br><span class="line">rd /s /q %DEPLOY%\META-INF</span><br><span class="line">rd /s /q %DEPLOY%\WEB-INF</span><br><span class="line">rd /s /q %DEPLOY%\static</span><br><span class="line">del /s /q %DEPLOY%\index.jsp</span><br><span class="line"></span><br><span class="line">pause</span><br></pre></td></tr></table></figure></p>
+<p>这个脚本用来去掉lib下依赖的jar包，test.proterties，log4j.properties,再重新压缩为war包，去掉lib下的jar包，是因为项目的依赖包太大了，传输时很费时间，而jar包在部署过后很可能不会变动。<br> test.properties与log4j.properties 为项目的配置文件，开发环境与服务器的配置肯定是不一样的，因此不能直接覆盖掉，而是全量部署时放在项目上，以后增量部署的时候不覆盖即可。</p>
+<p>1.本地install为test.war，如果为增量部署还要执行一下deploy脚本。<br>2.把deploy过的war包通过Filezilla等传输到服务器指定的部署目录，我们这里服务器的下项目部署文件夹为/root/deploy，根据项目名创建一个文件夹test，因此我们的test项目的部署路径为/root/deploy/test，文件夹下有我们的test.war文件。<br>3.在/root/deploy/test文件夹下，会创建一个<code>deploy.sh</code> 脚本文件，与客户端的deploy.bat 相呼应。<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/sh</span></span><br><span class="line">deploy_file_dir=/root/deploy/<span class="built_in">test</span></span><br><span class="line">deploy_dir=/opt/web/<span class="built_in">test</span></span><br><span class="line"><span class="built_in">cd</span> <span class="variable">$&#123;deploy_dir&#125;</span>/deploy</span><br><span class="line">rm -rf ./*</span><br><span class="line">jar xvf <span class="variable">$&#123;deploy_file_dir&#125;</span>/test.war</span><br><span class="line">cp -rf ./* <span class="variable">$&#123;deploy_dir&#125;</span>/webapps/</span><br><span class="line"><span class="built_in">cd</span> ../</span><br><span class="line">sh stop.sh</span><br><span class="line">sh run.sh</span><br></pre></td></tr></table></figure></p>
+<p>查看脚本内容，我们可以得知deploy.sh 脚本的功能<br>1.由于客户端传送过来的可能不会是全量test.war包，因此不能简单的把test.war包直接放到、opt/web/test/webapps目录下，这样会覆盖掉服务器的项目配置，也会导致部分文件丢失。只能解压test.war包 把全部内容复制到webapps下，存在就覆盖，而不存在的也不会删掉webapps下存在的。<br>2.执行stop.sh 停止test项目，因为test项目之前可能已经启动了。<br>3.执行run.sh 启动项目。</p>
+<p>到此为止，我们已经用了脚本代替一部分手动操作，但还是不够完善，比如项目实例还是要自己手动搭建，启动脚本也要手动编写，下面提供了一键部署tomcat实例项目环境的脚本<code>build.sh</code>，最大化利用脚本，减少手动操作。(这里没有添加Nginx配置，所以有关Nginx的配置还要手动添加，并且重新加载！)<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br><span class="line">250</span><br><span class="line">251</span><br><span class="line">252</span><br><span class="line">253</span><br><span class="line">254</span><br><span class="line">255</span><br><span class="line">256</span><br><span class="line">257</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/sh</span></span><br><span class="line"><span class="comment">#一键部署Tomcat实例项目环境</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#项目名称</span></span><br><span class="line">PROJECT_NAME=www.dongxiaoxia.xyz</span><br><span class="line"><span class="comment">#tomcat关闭端口</span></span><br><span class="line">SERVER_PORT=8006</span><br><span class="line"><span class="comment">#Http监听端口</span></span><br><span class="line">HTTP_PORT=8080</span><br><span class="line"><span class="comment">##################以上三个参数需要修改############################</span></span><br><span class="line"><span class="comment">#项目基础路径</span></span><br><span class="line">PROJECT_BASE_PATH=/opt/web/</span><br><span class="line"><span class="comment">#日志基础路径</span></span><br><span class="line">LOG_BASE_PATH=/opt/<span class="built_in">log</span>/</span><br><span class="line"><span class="comment">#部署基础路径</span></span><br><span class="line">DEPLOY_BASE_PATH=/root/deploy/</span><br><span class="line"><span class="comment">#Java安装路径</span></span><br><span class="line">JAVA_HOME=/opt/soft/jdk1.8.0_11/</span><br><span class="line"><span class="comment">#Tomcat安装路径</span></span><br><span class="line">CATALINA_HOME=/opt/soft/apache-tomcat-7.0.73</span><br><span class="line"><span class="comment">#Tomcat活跃配置路径,也就是项目部署路径</span></span><br><span class="line">CATALINA_BASE=<span class="variable">$PROJECT_BASE_PATH</span><span class="variable">$PROJECT_NAME</span></span><br><span class="line"><span class="comment">#tomcat server.xml配置文件路径</span></span><br><span class="line">SERVER_XML=<span class="variable">$CATALINA_BASE</span>/conf/server.xml</span><br><span class="line"><span class="comment">#########################################################################################</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">'Java安装路径:'</span><span class="variable">$JAVA_HOME</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">'Tomcat安装路径:'</span><span class="variable">$CATALINA_HOME</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">'Tomcat项目实例路径:'</span><span class="variable">$CATALINA_BASE</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">'项目war包部署上传路径:'</span><span class="variable">$DEPLOY_BASE_PATH</span><span class="variable">$PROJECT_NAME</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">'tomcat server.xml配置文件路径:'</span><span class="variable">$SERVER_XML</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">'项目日志路径:'</span><span class="variable">$LOG_BASE_PATH</span><span class="variable">$PROJECT_NAME</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">'tomcat关闭端口:'</span><span class="variable">$SERVER_PORT</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">'Http监听端口:'</span><span class="variable">$HTTP_PORT</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#################创建tomcat实例 修改server.xml配置##########################</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#复制tomcat实例所需文件夹</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">'复制tomcat实例所需文件夹'</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> [ ! <span class="_">-d</span> <span class="string">"<span class="variable">$CATALINA_BASE</span>"</span> ]; <span class="keyword">then</span></span><br><span class="line">mkdir -p <span class="string">"<span class="variable">$CATALINA_BASE</span>"</span></span><br><span class="line"><span class="keyword">fi</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">cd</span> <span class="variable">$CATALINA_HOME</span></span><br><span class="line">cp -r conf <span class="variable">$CATALINA_BASE</span></span><br><span class="line">mkdir <span class="variable">$CATALINA_BASE</span>/webapps</span><br><span class="line">mkdir <span class="variable">$CATALINA_BASE</span>/work</span><br><span class="line">mkdir <span class="variable">$CATALINA_BASE</span>/logs</span><br><span class="line"></span><br><span class="line"><span class="built_in">echo</span> <span class="string">'修改server.xml配置'</span></span><br><span class="line"><span class="comment"># 修改tomcat关闭端口</span></span><br><span class="line">sed -i 22s@8005@<span class="variable">$&#123;SERVER_PORT&#125;</span>@ <span class="variable">$SERVER_XML</span></span><br><span class="line"><span class="comment"># 修改Http监听端口</span></span><br><span class="line">sed -i 71s@8080@<span class="variable">$&#123;HTTP_PORT&#125;</span>@ <span class="variable">$SERVER_XML</span></span><br><span class="line"><span class="comment"># 统一web应用程序的路径</span></span><br><span class="line">sed -i <span class="string">'125s@appBase="webapps"@appBase="'</span><span class="variable">$CATALINA_BASE</span><span class="string">'/webapps"@'</span> <span class="variable">$SERVER_XML</span></span><br><span class="line"><span class="comment"># 关闭自动部署</span></span><br><span class="line"><span class="comment">#sed -i '126s@autoDeploy="true"@autoDeploy="false"@' $SERVER_XML</span></span><br><span class="line">sed -i <span class="string">'141a&lt;Host name="localhost"  appBase="'</span><span class="variable">$CATALINA_BASE</span><span class="string">'/webapps" autoDeploy="false" deployOnStartup="false"&gt;\n     &lt;Context path="" docBase="'</span><span class="variable">$CATALINA_BASE</span><span class="string">'/webapps" crossContext="true" allowLinking="true" reloadable="false"&gt;\n         &lt;JarScanner scanAllDirectories="true" /&gt;\n         &lt;Valve className="org.apache.catalina.valves.AccessLogValve" directory="'</span><span class="variable">$CATALINA_BASE</span><span class="string">'/logs/" prefix="gh_access_log." suffix=".log" pattern="%a %A %t %S %b %r %s %&#123;Referer&#125;i %&#123;User-Agent&#125;i %D" resolveHosts="false" /&gt;\n     &lt;/Context&gt;\n&lt;/Host&gt;</span><br><span class="line">'</span> <span class="variable">$SERVER_XML</span></span><br><span class="line"></span><br><span class="line">sed -i <span class="string">'125,141d'</span> <span class="variable">$SERVER_XML</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#######################创建run.sh脚本文件###################################</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">'创建run.sh脚本文件'</span></span><br><span class="line"><span class="built_in">cd</span> <span class="variable">$CATALINA_BASE</span></span><br><span class="line">touch run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'#!/bin/sh'</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'TOMCAT_HOME='</span><span class="variable">$CATALINA_HOME</span> &gt;&gt; run.sh</span><br><span class="line"><span class="comment">#echo 'CATALINA_BASE='$CATALINA_BASE &gt;&gt; run.sh</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">'CATALINA_BASE=$(cd "$(dirname $0)"; pwd)'</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'CATALINA_PID=$CATALINA_BASE/tomcat.pid'</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'JAVA_HOME='</span><span class="variable">$JAVA_HOME</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'CLASSPATH=$CLASSPATH:$JAVA_HOME/lib:$JAVA_HOME/jre/lib'</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/apr/lib'</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'PATH=$PATH:$JAVA_HOME/bin'</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">''</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'#路径为【/opt/web/xxx】时，项目名则为【xxx】'</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">"PROJECT_NAME=\`echo \$CATALINA_BASE | awk -F \"/\" '&#123;print \$NF&#125;'\`"</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">''</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'#检测temp目录是否存在，不存在则创建'</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'if [ ! -d "$CATALINA_BASE/temp" ]; then'</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'    mkdir "$CATALINA_BASE/temp"'</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'fi'</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">''</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'#日志目录名'</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'PROJECT_LOG='</span><span class="variable">$LOG_BASE_PATH</span><span class="string">'$PROJECT_NAME/catalina.out'</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">''</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'JAVA_OPTS="-server -Xms32m -Xmx512m -Xmn32m -Xss1024K -XX:PermSize=32m -XX:MaxPermSize=64m -XX:ParallelGCThreads=32 -XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:+UseCMSCompactAtFullCollection -XX:SurvivorRatio=4 -XX:MaxTenuringThreshold=10 -XX:CMSInitiatingOccupancyFraction=80"'</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">''</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'export TOMCAT_HOME CATALINA_BASE CATALINA_PID JAVA_HOME CLASSPATH PATH JAVA_OPTS PROJECT_NAME PROJECT_LOG LD_LIBRARY_PATH'</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">''</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'proj_dir=$CATALINA_BASE'</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'if [ -n "$proj_dir" ]'</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'then'</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">"        ps aux | grep \"\$proj_dir\" | grep -v \"grep\" | grep -v \"\$CATALINA_BASE/\(start.sh\|stop.sh\|restart.sh\|logs/catalina.out\)\" &gt; /dev/null"</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'        status=$?'</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">''</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'        if  [ $status -eq 0 ] &amp;&amp; [ -s $CATALINA_PID  ]'</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'        then'</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'                echo "The $proj_dir tomcat is running and the pid_file is exist !"'</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'                exit 1'</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'        elif [ $status -eq 0 ] || [ -s $CATALINA_PID  ]'</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'        then'</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'                echo "kill one"'</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">"                ps aux | grep \"\$proj_dir\" | grep -v \"grep\" | grep -v \"\$CATALINA_BASE/\(start.sh\|stop.sh\|restart.sh\|logs/catalina.out\)\" | awk '&#123;print \$2&#125;' | xargs -i kill -9 &#123;&#125;"</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'                &gt; $CATALINA_PID'</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'                $TOMCAT_HOME/bin/catalina.sh start'</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'        else'</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'                $TOMCAT_HOME/bin/catalina.sh start'</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'        fi'</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">''</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'else'</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'        echo "start failt!!!"'</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'        exit 1'</span> &gt;&gt; run.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'fi'</span> &gt;&gt; run.sh</span><br><span class="line"></span><br><span class="line"><span class="comment">#######################创建stop.sh脚本文件###################################</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">'创建stop.sh脚本文件'</span></span><br><span class="line"><span class="built_in">cd</span> <span class="variable">$CATALINA_BASE</span></span><br><span class="line">touch stop.sh</span><br><span class="line"></span><br><span class="line"><span class="built_in">echo</span> <span class="string">'#!/bin/sh'</span> &gt;&gt; stop.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'TOMCAT_HOME='</span><span class="variable">$CATALINA_HOME</span> &gt;&gt; stop.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'#CATALINA_BASE='</span><span class="variable">$CATALINA_BASE</span> &gt;&gt; stop.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'CATALINA_BASE=$(cd "$(dirname $0)"; pwd)'</span> &gt;&gt; stop.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'CATALINA_PID=$CATALINA_BASE/tomcat.pid'</span> &gt;&gt; stop.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'JAVA_HOME='</span><span class="variable">$JAVA_HOME</span> &gt;&gt; stop.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'CLASSPATH=$CLASSPATH:$JAVA_HOME/lib:$JAVA_HOME/jre/lib'</span> &gt;&gt; stop.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'PATH=$PATH:$JAVA_HOME/bin'</span> &gt;&gt; stop.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">''</span> &gt;&gt; stop.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'#路径为【/opt/web/xxx】时，项目名则为【xxx】'</span> &gt;&gt; stop.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">"PROJECT_NAME=\`echo \$CATALINA_BASE | awk -F \"/\" '&#123;print \$NF&#125;'\`"</span> &gt;&gt; stop.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'echo $PROJECT_NAME'</span> &gt;&gt; stop.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">''</span> &gt;&gt; stop.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'#日志目录名'</span> &gt;&gt; stop.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'PROJECT_LOG='</span><span class="variable">$LOG_BASE_PATH</span><span class="string">'$PROJECT_NAME/'</span> &gt;&gt; stop.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">''</span> &gt;&gt; stop.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'export TOMCAT_HOME CATALINA_BASE CATALINA_PID JAVA_HOME CLASSPATH PATH JAVA_OPTS PROJECT_NAME PROJECT_LOG'</span> &gt;&gt; stop.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">''</span> &gt;&gt; stop.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'proj_dir=$CATALINA_BASE'</span> &gt;&gt; stop.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'$TOMCAT_HOME/bin/catalina.sh stop'</span> &gt;&gt; stop.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'sleep 5'</span> &gt;&gt; stop.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'if [ -n "$proj_dir" ]'</span> &gt;&gt; stop.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'then'</span> &gt;&gt; stop.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">"        ps aux | grep \"\$proj_dir\" | grep -v \"grep\" | grep -v \"\$CATALINA_BASE/\(start.sh\|stop.sh\|restart.sh\|logs/catalina.out\)\" &gt; /dev/null"</span> &gt;&gt; stop.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'        status=$?'</span> &gt;&gt; stop.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'        if [ $status -eq 0 ] || [ -s $CATALINA_PID  ]'</span> &gt;&gt; stop.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'        then'</span> &gt;&gt; stop.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'                echo "kill it"'</span> &gt;&gt; stop.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">"                ps aux | grep \"\$proj_dir\" | grep -v \"grep\" | grep -v \"\$CATALINA_BASE/\(start.sh\|stop.sh\|restart.sh\|logs/catalina.out\)\" |  awk '&#123;print \$2&#125;' | xargs -i kill -9 &#123;&#125;"</span> &gt;&gt; stop.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'                &gt; $CATALINA_PID'</span> &gt;&gt; stop.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'        fi'</span> &gt;&gt; stop.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'else'</span> &gt;&gt; stop.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'        echo "stop failt!!!"'</span> &gt;&gt; stop.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'        exit 1'</span> &gt;&gt; stop.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'fi'</span> &gt;&gt; stop.sh</span><br><span class="line"></span><br><span class="line"><span class="comment">#######################创建debug.sh脚本文件###################################</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">'创建debug.sh脚本文件'</span></span><br><span class="line"><span class="built_in">cd</span> <span class="variable">$CATALINA_BASE</span></span><br><span class="line">touch debug.sh</span><br><span class="line"></span><br><span class="line"><span class="built_in">echo</span> <span class="string">'#!/bin/sh'</span> &gt;&gt; debug.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'TOMCAT_HOME='</span><span class="variable">$CATALINA_HOME</span> &gt;&gt; debug.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'CATALINA_BASE=$(cd "$(dirname $0)"; pwd)'</span> &gt;&gt; debug.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'CATALINA_PID=$CATALINA_BASE/tomcat.pid'</span> &gt;&gt; debug.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'JAVA_HOME='</span><span class="variable">$JAVA_HOME</span> &gt;&gt; debug.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'CLASSPATH=$CLASSPATH:$JAVA_HOME/lib:$JAVA_HOME/jre/lib'</span> &gt;&gt; debug.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/apr/lib'</span> &gt;&gt; debug.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'PATH=$PATH:$JAVA_HOME/bin'</span> &gt;&gt; debug.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">''</span> &gt;&gt; debug.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'#路径为【/opt/web/xxx】时，项目名则为【xxx】'</span> &gt;&gt; debug.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">"PROJECT_NAME=\`echo \$CATALINA_BASE | awk -F \"/\" '&#123;print \$NF&#125;'\`"</span> &gt;&gt; debug.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">''</span> &gt;&gt; debug.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'#日志目录名'</span> &gt;&gt; debug.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'PROJECT_LOG='</span><span class="variable">$LOG_BASE_PATH</span><span class="string">'$PROJECT_NAME/catalina.out'</span> &gt;&gt; debug.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">''</span> &gt;&gt; debug.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'JAVA_OPTS="-server -Xms32m -Xmx512m -Xmn32m -Xss1024K -XX:PermSize=32m -XX:MaxPermSize=64m -XX:ParallelGCThreads=32 -XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:+UseCMSCompactAtFullCollection -XX:SurvivorRatio=4 -XX:MaxTenuringThreshold=10 -XX:CMSInitiatingOccupancyFraction=80"'</span> &gt;&gt; debug.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">''</span> &gt;&gt; debug.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'export TOMCAT_HOME CATALINA_BASE CATALINA_PID JAVA_HOME CLASSPATH PATH JAVA_OPTS PROJECT_NAME PROJECT_LOG LD_LIBRARY_PATH'</span> &gt;&gt; debug.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">''</span> &gt;&gt; debug.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'proj_dir=$CATALINA_BASE'</span> &gt;&gt; debug.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'if [[ -n "$proj_dir" ]]'</span> &gt;&gt; debug.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'then'</span> &gt;&gt; debug.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'        ps aux | grep "$proj_dir" | grep -v "grep" | grep -v "$CATALINA_BASE/\(start.sh\|stop.sh\|restart.sh\|logs/catalina.out\)" &gt; /dev/null'</span> &gt;&gt; debug.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'        status=$?'</span> &gt;&gt; debug.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">''</span> &gt;&gt; debug.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'        if  [[ $status -eq 0 ]] &amp;&amp; [[ -s $CATALINA_PID  ]]'</span> &gt;&gt; debug.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'        then'</span> &gt;&gt; debug.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'                echo "The $proj_dir tomcat is running and the pid_file is exist !"'</span> &gt;&gt; debug.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'                exit 1'</span> &gt;&gt; debug.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'        elif [[ $status -eq 0 ]] || [[ -s $CATALINA_PID  ]]'</span> &gt;&gt; debug.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'        then'</span> &gt;&gt; debug.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'                echo "kill one"'</span> &gt;&gt; debug.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">"                ps aux | grep \"\$proj_dir\" | grep -v \"grep\" | grep -v \"\$CATALINA_BASE/\(start.sh\|stop.sh\|restart.sh\|logs/catalina.out\)\" | awk '&#123;print \$2&#125;' | xargs -i kill -9 &#123;&#125;"</span> &gt;&gt; debug.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'                &gt; $CATALINA_PID'</span> &gt;&gt; debug.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'                $TOMCAT_HOME/bin/catalina.sh jpda start'</span> &gt;&gt; debug.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'        else'</span> &gt;&gt; debug.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'                $TOMCAT_HOME/bin/catalina.sh jpda start'</span> &gt;&gt; debug.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'        fi'</span> &gt;&gt; debug.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'else'</span> &gt;&gt; debug.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'        echo "start failt!!!"'</span> &gt;&gt; debug.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'        exit 1'</span> &gt;&gt; debug.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'fi'</span> &gt;&gt; debug.sh</span><br><span class="line"></span><br><span class="line"><span class="comment">#######################创建restart.sh脚本文件###################################</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">'创建restart.sh脚本文件'</span></span><br><span class="line"><span class="built_in">cd</span> <span class="variable">$CATALINA_BASE</span></span><br><span class="line">touch restart.sh</span><br><span class="line"></span><br><span class="line"><span class="built_in">echo</span> <span class="string">'#!/bin/sh'</span> &gt;&gt; restart.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'TOMCAT_HOME='</span><span class="variable">$CATALINA_HOME</span> &gt;&gt; restart.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'CATALINA_BASE=$(cd "$(dirname $0)"; pwd)'</span> &gt;&gt; restart.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'CATALINA_PID=$CATALINA_BASE/tomcat.pid'</span> &gt;&gt; restart.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'JAVA_HOME=/opt/soft/jdk/1.8.11/jdk1.8.0_11'</span> &gt;&gt; restart.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'CLASSPATH=$CLASSPATH:$JAVA_HOME/lib:$JAVA_HOME/jre/lib'</span> &gt;&gt; restart.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'PATH=$PATH:$JAVA_HOME/bin'</span> &gt;&gt; restart.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'JAVA_OPTS="-server -Xms1g -Xmx1g -Xmn512m -Xss1024K -XX:PermSize=256m -XX:MaxPermSize=512m -XX:ParallelGCThreads=8 -XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:+UseCMSCompactAtFullCollection -XX:SurvivorRatio=4 -XX:MaxTenuringThreshold=10 -XX:CMSInitiatingOccupancyFraction=80"'</span> &gt;&gt; restart.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">''</span> &gt;&gt; restart.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'#路径为【/opt/web/xxx】时，项目名则为【xxx】'</span> &gt;&gt; restart.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">"PROJECT_NAME=\`echo \$CATALINA_BASE | awk -F \"/\" '&#123;print \$NF&#125;'\`"</span> &gt;&gt; restart.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">''</span> &gt;&gt; restart.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'#日志目录名'</span> &gt;&gt; restart.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'PROJECT_LOG='</span><span class="variable">$LOG_BASE_PATH</span><span class="string">'$PROJECT_NAME/catalina.out'</span> &gt;&gt; restart.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">''</span> &gt;&gt; restart.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'export TOMCAT_HOME CATALINA_BASE CATALINA_PID JAVA_HOME CLASSPATH PATH JAVA_OPTS PROJECT_NAME PROJECT_LOG'</span> &gt;&gt; restart.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">''</span> &gt;&gt; restart.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'sh $CATALINA_BASE/stop.sh'</span> &gt;&gt; restart.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'sh $CATALINA_BASE/start.sh'</span> &gt;&gt; restart.sh</span><br><span class="line"><span class="comment">#######################创建deploy.sh脚本文件###################################</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">'创建deploy.sh脚本文件'</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> [ ! <span class="_">-d</span> <span class="string">"<span class="variable">$DEPLOY_BASE_PATH</span><span class="variable">$PROJECT_NAME</span>"</span> ]; <span class="keyword">then</span></span><br><span class="line">  mkdir -p <span class="string">"<span class="variable">$DEPLOY_BASE_PATH</span><span class="variable">$PROJECT_NAME</span>"</span></span><br><span class="line"><span class="keyword">fi</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">cd</span> <span class="variable">$DEPLOY_BASE_PATH</span><span class="variable">$PROJECT_NAME</span></span><br><span class="line">touch deploy.sh</span><br><span class="line"></span><br><span class="line"><span class="built_in">echo</span> <span class="string">'#!/bin/sh'</span> &gt;&gt; deploy.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">"deploy_file_dir=<span class="variable">$DEPLOY_BASE_PATH</span><span class="variable">$PROJECT_NAME</span>"</span> &gt;&gt; deploy.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">"deploy_dir=<span class="variable">$CATALINA_BASE</span>"</span> &gt;&gt; deploy.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">"if [ ! -d "</span>\<span class="variable">$&#123;deploy_dir&#125;</span>/deploy<span class="string">" ]; then"</span> &gt;&gt; deploy.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">"  mkdir -p "</span>\<span class="variable">$&#123;deploy_dir&#125;</span>/deploy<span class="string">""</span> &gt;&gt; deploy.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">"fi"</span> &gt;&gt; deploy.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'cd $&#123;deploy_dir&#125;/deploy'</span> &gt;&gt; deploy.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'rm -rf ./*'</span> &gt;&gt; deploy.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'jar xvf $&#123;deploy_file_dir&#125;/'</span><span class="variable">$PROJECT_NAME</span><span class="string">'.war'</span> &gt;&gt; deploy.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'cp -rf ./* $&#123;deploy_dir&#125;/webapps/'</span> &gt;&gt; deploy.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'cd ../'</span> &gt;&gt; deploy.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'sh stop.sh'</span> &gt;&gt; deploy.sh</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'sh run.sh'</span> &gt;&gt; deploy.sh</span><br><span class="line"><span class="comment">#########################################################################################</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">'tomcat项目实例创建成功!'</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">"请把war包放置到<span class="variable">$DEPLOY_BASE_PATH</span><span class="variable">$PROJECT_NAME</span>目录下，执行<span class="variable">$DEPLOY_BASE_PATH</span><span class="variable">$PROJECT_NAME</span>/deploy脚本启动项目."</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">"或者直接解压war包到<span class="variable">$CATALINA_BASE</span>/webapps下。执行<span class="variable">$CATALINA_BASE</span>/run脚本启动项目."</span></span><br></pre></td></tr></table></figure></p>
+<h2 id="6-_部署总结">6. 部署总结</h2><h3 id="为什么">为什么</h3><p>本篇文章都是为了解决文章开头的问题及后续问题：本地开发完项目后如何简单部署到服务器？</p>
+<h3 id="怎么做">怎么做</h3><ol>
+<li>服务器项目部署规范化，相关软件规范化，统一部署，集中管理。</li>
+<li>用脚本替代手动操作。</li>
+<li>部署文档清晰易懂。</li>
+</ol>
+<h3 id="怎么样">怎么样</h3><p><strong>优点</strong></p>
+<ol>
+<li>tomcat多实例部署，启动、关闭一个项目站点不影响其他站点，没有耦合。</li>
+<li>对添加开放，对删除关闭。<br>要添加一个新的项目站点，只需简单的执行一下脚本就能够实现，不会影响其他站点配置。</li>
+<li>第一次部署及后续增量部署都极其简单、容易操作、全程脚本化。</li>
+<li>整个服务器规范化，各个项目部署路径、相关软件路径、日志路径清晰明了。</li>
+<li>项目日志集中管理，方便后续统计分析。 </li>
+</ol>
+<p><strong>劣势</strong></p>
+<ol>
+<li>要求部署人员具备一定的脚本语法基础，能够理解相关的脚本原理。</li>
+<li>脚本的创建是直接添加内容，如果之前已经存在相关的文件，没有采取替换而是追加，因此要确定相关路径上的文件是否正确。</li>
+</ol>
+<h3 id="几句话说明白部署">几句话说明白部署</h3><p><strong>部署环境整体规划</strong></p>
+<ol>
+<li>项目目录 /opt/web</li>
+<li>日志目录 /opt/log</li>
+<li>jdk/tomcat/nginx等目录 安装环境 /opt/soft</li>
+<li>项目应用war包上传到服务器的目录 /root/deploy</li>
+</ol>
+<p>假设现在有3个项目 test test1 test2<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">ubuntu<span class="comment"># ls /opt/web /root/deploy/ /opt/soft /opt/log</span></span><br><span class="line">/opt/<span class="built_in">log</span>:</span><br><span class="line"><span class="built_in">test</span>  <span class="built_in">test</span>1  <span class="built_in">test</span>2</span><br><span class="line"></span><br><span class="line">/opt/soft:</span><br><span class="line">apache-tomcat-7.0.73  include	   lib	  nginx-1.6.2	      openssl-1.1.0c	     pcre-8.39	       share  zlib-1.2.8</span><br><span class="line">bin		      jdk1.8.0_11  nginx  nginx-1.6.2.tar.gz  openssl-1.1.0c.tar.gz  pcre-8.39.tar.gz  ssl    zlib128.zip</span><br><span class="line"></span><br><span class="line">/opt/web:</span><br><span class="line">build.sh  <span class="built_in">test</span>	<span class="built_in">test</span>1  <span class="built_in">test</span>2</span><br><span class="line"></span><br><span class="line">/root/deploy/:</span><br><span class="line"><span class="built_in">test</span>  <span class="built_in">test</span>1  <span class="built_in">test</span>2</span><br><span class="line">ubuntu<span class="comment">#</span></span><br></pre></td></tr></table></figure></p>
+<p><strong>全量部署(第一次部署)</strong></p>
+<ol>
+<li><strong>执行<code>build.sh</code>脚本一键部署项目</strong></li>
+<li>配置并重新加载Nginx代理配置</li>
+<li>开发环境install打包war包传输到服务器deploy目录</li>
+<li>执行<code>deploy.sh</code>脚本，打开项目日志查看启动情况</li>
+</ol>
+<p><strong>增量部署</strong></p>
+<ol>
+<li>开发环境install打包war包,<strong>执行开发环境<code>deploy.sh(mac)/deploy.bat(windows)</code>脚本</strong>，传输到服务器deploy目录 </li>
+<li>执行<code>deploy.sh</code>脚本，打开项目日志查看启动情况</li>
+</ol>
+
+      
+    </div>
+    
+    <div>
+      
+        
+<div id="wechat_subscriber" style="display: block； padding: 10px 0; margin: 20px auto; width: 100%; text-align: center">
+    <img id="wechat_subscriber_qcode" src="/images/wechat-qcode.jpg" alt="东小侠 wechat" style="width: 200px; max-width: 100%;"/>
+    <div>欢迎您扫一扫上面的微信公众号，订阅我的博客！</div>
+</div>
+
+      
+    </div>
+
+    <div>
+      
+        
+<div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center">
+  <div>我知道是不会有人点的，但万一有人想不开呢？</div>
+  <button id="rewardButton", disable="enable", onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}", style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+    <span onmouseover="this.style.color='rgb(236,96,0)';this.style.background='rgb(204,204,204)'" onMouseOut="this.style.color='#fff';this.style.background='rgb(236,96,0)'" style="display: inline-block; width: 70px; height: 70px; border-radius: 100%; line-height: 81px; color: #fff; font: 400 35px/75px 'microsofty'; background: rgb(236,96,0)">赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/images/weixin.jpg" alt="东小侠 WeChat Pay" style="width: 200px; max-width: 100%; display: inline-block"/>
+        <p>微信打赏</p>
+      </div>
+    
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="/images/zhifubao.jpg" alt="东小侠 Alipay" style="width: 200px; max-width: 100%; display: inline-block"/>
+        <p>支付宝打赏</p>
+      </div>
+    
+  </div>
+</div>
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/lunix-部署-服务器/" rel="tag">#lunix 部署 服务器</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/10/18/github-maven-repository/" rel="next" title="利用GitHub搭建个人maven仓库">
+                <i class="fa fa-chevron-left"></i> 利用GitHub搭建个人maven仓库
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <div class="ds-share flat" data-thread-key="2017/01/19/lunix/"
+     data-title="服务器 JDK + Tomcat + Nginx 部署环境整体搭建及自动化部署的具体实现"
+     data-content=""
+     data-url="http://www.dongxiaoxia.xyz/2017/01/19/lunix/">
+  <div class="ds-share-inline">
+    <ul  class="ds-share-icons-16">
+
+      <li data-toggle="ds-share-icons-more"><a class="ds-more" href="javascript:void(0);">分享到：</a></li>
+      <li><a class="ds-weibo" href="javascript:void(0);" data-service="weibo">微博</a></li>
+      <li><a class="ds-qzone" href="javascript:void(0);" data-service="qzone">QQ空间</a></li>
+      <li><a class="ds-qqt" href="javascript:void(0);" data-service="qqt">腾讯微博</a></li>
+      <li><a class="ds-wechat" href="javascript:void(0);" data-service="wechat">微信</a></li>
+
+    </ul>
+    <div class="ds-share-icons-more">
+    </div>
+  </div>
+</div>
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  <p>热评文章</p>
+  <div class="ds-top-threads" data-range="weekly" data-num-items="4"></div>
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2017/01/19/lunix/"
+           data-title="服务器 JDK + Tomcat + Nginx 部署环境整体搭建及自动化部署的具体实现" data-url="http://www.dongxiaoxia.xyz/2017/01/19/lunix/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="东小侠" />
+          <p class="site-author-name" itemprop="name">东小侠</p>
+          <p class="site-description motion-element" itemprop="description" style="margin-top: 5px;font-size: 15px;color: #fff">怕什么真理无穷 进一寸有进一寸的欢喜</p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">18</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">11</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">14</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/dongxiaoxia" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.zhihu.com/people/dong-xiao-xia" target="_blank" title="知乎">
+                  
+                    <i class="fa fa-globe"></i>
+                  
+                  知乎
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.douban.com/people/dongxiaoxia" target="_blank" title="豆瓣">
+                  
+                    <i class="fa fa-globe"></i>
+                  
+                  豆瓣
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-服务器环境整体规划"><span class="nav-number">1.</span> <span class="nav-text">1.服务器环境整体规划</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-运行环境安装"><span class="nav-number">2.</span> <span class="nav-text">2.运行环境安装</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1_JDK"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 JDK</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2_Tomcat"><span class="nav-number">2.2.</span> <span class="nav-text">2.2 Tomcat</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-3_Nginx"><span class="nav-number">2.3.</span> <span class="nav-text">2.3 Nginx</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-_Tomcat多实例多应用部署"><span class="nav-number">3.</span> <span class="nav-text">3. Tomcat多实例多应用部署</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-_部署应用分类"><span class="nav-number">3.1.</span> <span class="nav-text">3.1. 部署应用分类</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2_目录结构认识"><span class="nav-number">3.2.</span> <span class="nav-text">3.2 目录结构认识</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3_多实例原理"><span class="nav-number">3.3.</span> <span class="nav-text">3.3 多实例原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-4_多实例多应用部署"><span class="nav-number">3.4.</span> <span class="nav-text">3.4 多实例多应用部署</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#创建tomcat实例"><span class="nav-number">3.4.1.</span> <span class="nav-text">创建tomcat实例</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#创建启停脚本"><span class="nav-number">3.4.2.</span> <span class="nav-text">创建启停脚本</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#修改conf文件夹下的server-xml"><span class="nav-number">3.4.3.</span> <span class="nav-text">修改conf文件夹下的server.xml</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#现在我们的目录结构如下:"><span class="nav-number">3.4.4.</span> <span class="nav-text">现在我们的目录结构如下:</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#启动tomcat多实例"><span class="nav-number">3.4.5.</span> <span class="nav-text">启动tomcat多实例</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-_Nginx配置"><span class="nav-number">4.</span> <span class="nav-text">4. Nginx配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-_自动化部署脚本"><span class="nav-number">5.</span> <span class="nav-text">5. 自动化部署脚本</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-_部署总结"><span class="nav-number">6.</span> <span class="nav-text">6. 部署总结</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#为什么"><span class="nav-number">6.1.</span> <span class="nav-text">为什么</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#怎么做"><span class="nav-number">6.2.</span> <span class="nav-text">怎么做</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#怎么样"><span class="nav-number">6.3.</span> <span class="nav-text">怎么样</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#几句话说明白部署"><span class="nav-number">6.4.</span> <span class="nav-text">几句话说明白部署</span></a></li></ol></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2015 - 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">东小侠</span>
+  <span class="with-love">
+    <i class="fa fa-heart-o"></i>
+  </span>
+  <apan> 岁月长 衣裳薄</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+        
+
+<div class="busuanzi-count">
+
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv"><i class="fa fa-user"></i>本站访客数<span class="busuanzi-value" id="busuanzi_value_site_uv"></span>人次</span>
+  
+
+  
+    <span class="site-pv"><i class="fa fa-eye"></i>本站总访问量<span class="busuanzi-value" id="busuanzi_value_site_pv"></span>次</span>
+  
+  
+</div>
+
+
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"dongxiaoxia"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+      
+      <script src="/vendors/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
+      <script src="/js/src/hook-duoshuo.js"></script>
+    
+  
+
+
+
+
+
+  
+  
+  
+
+  
+
+  
+
+</body>
+</html>
